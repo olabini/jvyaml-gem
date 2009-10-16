@@ -1,4 +1,5 @@
 Manifest.txt
+README.txt
 Rakefile
 lib/jvyaml.rb
 lib/jvyaml/store.rb
