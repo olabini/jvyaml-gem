@@ -1,4 +1,4 @@
-MANIFEST = FileList["Manifest.txt", "Rakefile", "lib/**/*.rb", "lib/jvyamlb.jar", "lib/jvyaml_internal.jar", "test/**/*.rb", "lib/**/*.rake", "src/**/*.java", "rakelib/*.rake"]
+MANIFEST = FileList["Manifest.txt", "README.txt", "Rakefile", "lib/**/*.rb", "lib/jvyamlb.jar", "lib/jvyaml_internal.jar", "test/**/*.rb", "lib/**/*.rake", "src/**/*.java", "rakelib/*.rake"]
 
 file "Manifest.txt" => :manifest
 task :manifest do
