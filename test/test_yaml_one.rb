@@ -249,13 +249,11 @@ YAML
   end
 
   def fuzz_roundtrip(str)
-    str.gsub! "\n ", "\n"
     out = YAML.load(YAML.dump(str))
     assert_equal str, out
   end
 
   values = (1..255).to_a
-  values.delete(13)
   more = ('a'..'z').to_a + ('A'..'Z').to_a
   blanks = [' ', "\t", "\n"]
 
