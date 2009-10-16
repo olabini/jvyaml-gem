@@ -9,7 +9,7 @@ Rake::Task['manifest'].invoke # Always regen manifest, so Hoe has up-to-date lis
 begin
   require 'hoe'
   hoe = Hoe.spec("jvyaml") do |p|
-    p.version = "0.0.1"
+    p.version = "0.0.2"
     p.url = "http://github.com/olabini/jvyaml-gem"
     p.author = "Ola Bini"
     p.email = "ola.bini@gmail.com"
