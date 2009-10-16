@@ -20,8 +20,6 @@ begin
 rescue LoadError => le
   puts le.to_s, *le.backtrace
   puts "Problem loading Hoe; please check the error above to ensure that Hoe is installed correctly"
-rescue => e
-  puts "ignoring error while loading Hoe: #{e.to_s}"
 end
 
 def rake(*args)
