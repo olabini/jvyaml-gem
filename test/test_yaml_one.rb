@@ -288,29 +288,26 @@ YAML
     list2 = JvYAML.load(JvYAML.dump(list))
     assert_equal 3, list2.map{ |ll| ll.object_id }.uniq.length
   end
-end
 
-__END__
+  def test_JRUBY_1659
+    JvYAML.load("{a: 2007-01-01 01:12:34}")
+  end
 
+  def test_JRUBY_1765
+    assert_equal Date.new(-1,1,1), JvYAML.load(Date.new(-1,1,1).to_jvyaml)
+  end
 
+  def test_JRBY_1766
+    assert JvYAML.load(Time.now.to_jvyaml).instance_of?(Time)
+    assert JvYAML.load("2007-01-01 01:12:34").instance_of?(String)
+    assert JvYAML.load("2007-01-01 01:12:34.0").instance_of?(String)
+    assert JvYAML.load("2007-01-01 01:12:34 +00:00").instance_of?(Time)
+    assert JvYAML.load("2007-01-01 01:12:34.0 +00:00").instance_of?(Time)
+    assert JvYAML.load("{a: 2007-01-01 01:12:34}")["a"].instance_of?(String)
+  end
 
-
-# JRUBY-1659
-JvYAML.load("{a: 2007-01-01 01:12:34}")
-
-# JRUBY-1765
-#assert_equal Date.new(-1,1,1), JvYAML.load(Date.new(-1,1,1).to_jvyaml)
-
-# JRUBY-1766
-test_ok JvYAML.load(Time.now.to_jvyaml).instance_of?(Time)
-test_ok JvYAML.load("2007-01-01 01:12:34").instance_of?(String)
-test_ok JvYAML.load("2007-01-01 01:12:34.0").instance_of?(String)
-test_ok JvYAML.load("2007-01-01 01:12:34 +00:00").instance_of?(Time)
-test_ok JvYAML.load("2007-01-01 01:12:34.0 +00:00").instance_of?(Time)
-test_ok JvYAML.load("{a: 2007-01-01 01:12:34}")["a"].instance_of?(String)
-
-# JRUBY-1898
-val = JvYAML.load(<<YAML)
+  def test_JRUBY_1898
+    val = JvYAML.load(<<YAML)
 ---
 - foo
 - foo
@@ -320,120 +317,130 @@ val = JvYAML.load(<<YAML)
 - {foo: foo}
 YAML
 
-test_ok val[0].object_id != val[1].object_id
-test_ok val[2].object_id != val[3].object_id
-test_ok val[4].object_id != val[5].object_id
+    assert val[0].object_id != val[1].object_id
+    assert val[2].object_id != val[3].object_id
+    assert val[4].object_id != val[5].object_id
+  end
 
-# JRUBY-1911
-val = JvYAML.load(<<YAML)
+  def test_JRUBY_1911
+    val = JvYAML.load(<<YAML)
 ---
 foo: { bar }
 YAML
 
-assert_equal({"foo" => {"bar" => nil}}, val)
+    assert_equal({"foo" => {"bar" => nil}}, val)
+  end
 
-# JRUBY-1756
-# This is almost certainly invalid JvYAML. but MRI handles it...
-val = JvYAML.load(<<YAML)
+  def test_JRUBY_1756
+    # This is almost certainly invalid JvYAML. but MRI handles it...
+    val = JvYAML.load(<<YAML)
 ---
 default: –
 - a
 YAML
-
-assert_equal({"default" => ['a']}, val)
-
-# JRUBY-1978, scalars can start with , if it's not ambigous
-assert_equal(",a", JvYAML.load("--- \n,a"))
-
-# Make sure that overriding to_jvyaml always throws an exception unless it returns the correct thing
-
-class TestYamlFoo
-  def to_jvyaml(*args)
-    "foo"
+    assert_equal({"default" => ['a']}, val)
   end
-end
 
-test_exception(TypeError) do
-  { :foo => TestYamlFoo.new }.to_jvyaml
-end
+  def test_JRUBY_1978
+    # JRUBY-1978, scalars can start with , if it's not ambigous
+    assert_equal(",a", JvYAML.load("--- \n,a"))
+  end
 
-# JRUBY-2019, handle tagged_classes, yaml_as and so on a bit better
+  # Make sure that overriding to_jvyaml always throws an exception unless it returns the correct thing
 
-assert_equal({
-             "tag:yaml.org,2002:omap"=>YAML::Omap,
-             "tag:yaml.org,2002:pairs"=>YAML::Pairs,
-             "tag:yaml.org,2002:set"=>YAML::Set,
-             "tag:yaml.org,2002:timestamp#ymd"=>Date,
-             "tag:yaml.org,2002:bool#yes"=>TrueClass,
-             "tag:yaml.org,2002:int"=>Integer,
-             "tag:yaml.org,2002:timestamp"=>Time,
-             "tag:yaml.org,2002:binary"=>String,
-             "tag:yaml.org,2002:str"=>String,
-             "tag:yaml.org,2002:map"=>Hash,
-             "tag:yaml.org,2002:null"=>NilClass,
-             "tag:yaml.org,2002:bool#no"=>FalseClass,
-             "tag:yaml.org,2002:seq"=>Array,
-             "tag:yaml.org,2002:float"=>Float,
-             "tag:ruby.yaml.org,2002:sym"=>Symbol,
-             "tag:ruby.yaml.org,2002:object"=>Object,
-             "tag:ruby.yaml.org,2002:hash"=>Hash,
-             "tag:ruby.yaml.org,2002:time"=>Time,
-             "tag:ruby.yaml.org,2002:symbol"=>Symbol,
-             "tag:ruby.yaml.org,2002:string"=>String,
-             "tag:ruby.yaml.org,2002:regexp"=>Regexp,
-             "tag:ruby.yaml.org,2002:range"=>Range,
-             "tag:ruby.yaml.org,2002:array"=>Array,
-             "tag:ruby.yaml.org,2002:exception"=>Exception,
-             "tag:ruby.yaml.org,2002:struct"=>Struct,
-           },
-           YAML::tagged_classes)
+  class TestYamlFoo
+    def to_jvyaml(*args)
+      "foo"
+    end
+  end
 
+  def test_returning_type_of_to_jvyaml
+    test_exception(TypeError) do
+      { :foo => TestYamlFoo.new }.to_jvyaml
+    end
+  end
 
-# JRUBY-2083
+  def test_JRUBY_2019
+    assert_equal({
+                   "tag:yaml.org,2002:omap"=>JvYAML::Omap,
+                   "tag:yaml.org,2002:pairs"=>JvYAML::Pairs,
+                   "tag:yaml.org,2002:set"=>JvYAML::Set,
+                   "tag:yaml.org,2002:timestamp#ymd"=>Date,
+                   "tag:yaml.org,2002:bool#yes"=>TrueClass,
+                   "tag:yaml.org,2002:int"=>Integer,
+                   "tag:yaml.org,2002:timestamp"=>Time,
+                   "tag:yaml.org,2002:binary"=>String,
+                   "tag:yaml.org,2002:str"=>String,
+                   "tag:yaml.org,2002:map"=>Hash,
+                   "tag:yaml.org,2002:null"=>NilClass,
+                   "tag:yaml.org,2002:bool#no"=>FalseClass,
+                   "tag:yaml.org,2002:seq"=>Array,
+                   "tag:yaml.org,2002:float"=>Float,
+                   "tag:ruby.yaml.org,2002:sym"=>Symbol,
+                   "tag:ruby.yaml.org,2002:object"=>Object,
+                   "tag:ruby.yaml.org,2002:hash"=>Hash,
+                   "tag:ruby.yaml.org,2002:time"=>Time,
+                   "tag:ruby.yaml.org,2002:symbol"=>Symbol,
+                   "tag:ruby.yaml.org,2002:string"=>String,
+                   "tag:ruby.yaml.org,2002:regexp"=>Regexp,
+                   "tag:ruby.yaml.org,2002:range"=>Range,
+                   "tag:ruby.yaml.org,2002:array"=>Array,
+                   "tag:ruby.yaml.org,2002:exception"=>Exception,
+                   "tag:ruby.yaml.org,2002:struct"=>Struct,
+                 },
+                 JvYAML::tagged_classes)
+  end
 
-assert_equal({'foobar' => '>= 123'}, JvYAML.load("foobar: >= 123"))
+  def test_JRUBY_2083
+    assert_equal({'foobar' => '>= 123'}, JvYAML.load("foobar: >= 123"))
+  end
 
-# JRUBY-2135
-assert_equal({'foo' => 'bar'}, JvYAML.load("---\nfoo: \tbar"))
+  def test_JRUBY_2135
+    assert_equal({'foo' => 'bar'}, JvYAML.load("---\nfoo: \tbar"))
+  end
 
-# JRUBY-1911
-assert_equal({'foo' => {'bar' => nil, 'qux' => nil}}, JvYAML.load("---\nfoo: {bar, qux}"))
+  def test_JRUBY_1911
+    assert_equal({'foo' => {'bar' => nil, 'qux' => nil}}, JvYAML.load("---\nfoo: {bar, qux}"))
+  end
 
-# JRUBY-2323
-class YAMLTestException < Exception;end
-class YAMLTestString < String; end
-assert_equal('--- !str:YAMLTestString', YAMLTestString.new.to_jvyaml.strip)
-assert_equal(YAMLTestString.new, YAML::load('--- !str:YAMLTestString'))
+  class YAMLTestException < Exception;end
+  class YAMLTestString < String; end
 
-assert_equal(<<EXCEPTION_OUT, YAMLTestException.new.to_jvyaml)
+  def test_JRUBY_2323
+    assert_equal('--- !str:YAMLTestString', YAMLTestString.new.to_jvyaml.strip)
+    assert_equal(YAMLTestString.new, JvYAML::load('--- !str:YAMLTestString'))
+    assert_equal(<<EXCEPTION_OUT, YAMLTestException.new.to_jvyaml)
 --- !ruby/exception:YAMLTestException
 message: YAMLTestException
 EXCEPTION_OUT
 
-assert_equal(YAMLTestException.new.inspect, YAML::load(YAMLTestException.new.to_jvyaml).inspect)
+    assert_equal(YAMLTestException.new.inspect, JvYAML::load(YAMLTestException.new.to_jvyaml).inspect)
+  end
 
-# JRUBY-2409
-assert_equal("*.rb", YAML::load("---\n*.rb"))
-assert_equal("&.rb", YAML::load("---\n&.rb"))
+  def test_JRUBY_2409
+    assert_equal("*.rb", JvYAML::load("---\n*.rb"))
+    assert_equal("&.rb", JvYAML::load("---\n&.rb"))
+  end
 
-# JRUBY-2443
-a_str = "foo"
-a_str.instance_variable_set :@bar, "baz"
+  def test_JRUBY_2443
+    a_str = "foo"
+    a_str.instance_variable_set :@bar, "baz"
 
-test_ok(["--- !str \nstr: foo\n\"@bar\": baz\n", "--- !str \n\"@bar\": baz\nstr: foo\n"].include?(a_str.to_jvyaml))
-assert_equal "baz", JvYAML.load(a_str.to_jvyaml).instance_variable_get(:@bar)
+    assert(["--- !str \nstr: foo\n\"@bar\": baz\n", "--- !str \n\"@bar\": baz\nstr: foo\n"].include?(a_str.to_jvyaml))
+    assert_equal "baz", JvYAML.load(a_str.to_jvyaml).instance_variable_get(:@bar)
 
-assert_equal :"abc\"flo", JvYAML.load("---\n:\"abc\\\"flo\"")
+    assert_equal :"abc\"flo", JvYAML.load("---\n:\"abc\\\"flo\"")
+  end
 
-# JRUBY-2579
-assert_equal [:year], JvYAML.load("---\n[:year]")
+  def test_JRUBY_2579
+    assert_equal [:year], JvYAML.load("---\n[:year]")
 
-assert_equal({
-             'date_select' => { 'order' => [:year, :month, :day] },
-             'some' => {
-               'id' => 1,
-               'name' => 'some',
-               'age' => 16}}, JvYAML.load(<<YAML))
+    assert_equal({
+                   'date_select' => { 'order' => [:year, :month, :day] },
+                   'some' => {
+                     'id' => 1,
+                     'name' => 'some',
+                     'age' => 16}}, JvYAML.load(<<YAML))
 date_select:
   order: [:year, :month, :day]
 some:
@@ -441,203 +448,202 @@ some:
     name: some
     age: 16
 YAML
+  end
 
+  def test_JRUBY_2754
+    obj = Object.new
+    objects1 = [obj, obj]
+    assert objects1[0].object_id == objects1[1].object_id
 
-# JRUBY-2754
-obj = Object.new
-objects1 = [obj, obj]
-test_ok objects1[0].object_id == objects1[1].object_id
+    objects2 = JvYAML::load objects1.to_jvyaml
+    assert objects2[0].object_id == objects2[1].object_id
+  end
 
-objects2 = YAML::load objects1.to_jvyaml
-test_ok objects2[0].object_id == objects2[1].object_id
+  class FooYSmith < Array; end
+  class FooXSmith < Hash; end
 
-# JRUBY-2192
-
-class FooYSmith < Array; end
-
-obj = JvYAML.load(<<YAMLSTR)
+  def test_JRUBY_2192
+    obj = JvYAML.load(<<YAMLSTR)
 --- !ruby/array:FooYSmith
 - val
 - val2
 YAMLSTR
 
-assert_equal FooYSmith, obj.class
+    assert_equal FooYSmith, obj.class
 
-
-class FooXSmith < Hash; end
-
-obj = JvYAML.load(<<YAMLSTR)
+    obj = JvYAML.load(<<YAMLSTR)
 --- !ruby/hash:FooXSmith
 key: value
 otherkey: othervalue
 YAMLSTR
 
-assert_equal FooXSmith, obj.class
+    assert_equal FooXSmith, obj.class
+  end
 
-# JRUBY-2976
-class PersonTestOne
-  yaml_as 'tag:data.allman.ms,2008:Person'
-end
+  class PersonTestOne
+    jvyaml_as 'tag:data.allman.ms,2008:Person'
+  end
 
-assert_equal "--- !data.allman.ms,2008/Person {}\n\n", PersonTestOne.new.to_jvyaml
-assert_equal PersonTestOne, JvYAML.load(PersonTestOne.new.to_jvyaml).class
+  def test_JRUBY_2976
+    assert_equal "--- !data.allman.ms,2008/Person {}\n\n", PersonTestOne.new.to_jvyaml
+    assert_equal PersonTestOne, JvYAML.load(PersonTestOne.new.to_jvyaml).class
 
-
-
-Hash.class_eval do
-  def to_jvyaml( opts = {} )
-    YAML::quick_emit( self, opts ) do |out|
-      out.map( jv_taguri, to_jvyaml_style ) do |map|
-        each do |k, v|
-          map.add( k, v )
+    Hash.class_eval do
+      def to_jvyaml( opts = {} )
+        YAML::quick_emit( self, opts ) do |out|
+          out.map( jv_taguri, to_jvyaml_style ) do |map|
+            each do |k, v|
+              map.add( k, v )
+            end
+          end
         end
       end
     end
-  end
 
-end
+    roundtrip({ "element" => "value", "array" => [ { "nested_element" => "nested_value" } ] })
 
-roundtrip({ "element" => "value", "array" => [ { "nested_element" => "nested_value" } ] })
-
-jruby3639 = <<Y
+    jruby3639 = <<Y
 --- !ruby/object:MySoap::InterfaceOne::DiscountServiceRequestType
 orderRequest: !ruby/object:MySoap::InterfaceOne::OrderType
   brand: !str
     str: ""
 Y
 
-test_no_exception { JvYAML.load(jruby3639) }
-
-# JRUBY-3773
-class Badger
-  attr_accessor :name, :age
-
-  def initialize(name, age)
-    @name = name
-    @age = age
+    assert_nothing_raised { JvYAML.load(jruby3639) }
   end
 
-  def to_s
-    "#{name}:#{age}"
+
+  class Badger
+    attr_accessor :name, :age
+
+    def initialize(name, age)
+      @name = name
+      @age = age
+    end
+
+    def to_s
+      "#{name}:#{age}"
+    end
+
+    def self.from_s (s)
+      ss = s.split(":")
+      Badger.new ss[0], ss[1]
+    end
   end
 
-  def self.from_s (s)
-    ss = s.split(":")
-    Badger.new ss[0], ss[1]
-  end
-end
+  #
+  # opening Badger to add custom YAML serialization
+  #
+  class Badger
+  jvyaml_as "tag:ruby.yaml.org,2002:#{self}"
 
-#
-# opening Badger to add custom YAML serialization
-#
-class Badger
-  yaml_as "tag:ruby.yaml.org,2002:#{self}"
+    def to_jvyaml (opts={})
+      YAML::quick_emit(self.object_id, opts) do |out|
+        out.map(jv_taguri) do |map|
+          map.add("s", to_s)
+        end
+      end
+    end
 
-  def to_jvyaml (opts={})
-    YAML::quick_emit(self.object_id, opts) do |out|
-      out.map(jv_taguri) do |map|
-        map.add("s", to_s)
+    def Badger.jvyaml_new (klass, tag, val)
+      s = val["s"]
+      begin
+        Badger.from_s s
+      rescue => e
+        raise "failed to decode Badger from '#{s}'"
       end
     end
   end
 
-  def Badger.yaml_new (klass, tag, val)
-    s = val["s"]
-    begin
-      Badger.from_s s
-    rescue => e
-      raise "failed to decode Badger from '#{s}'"
-    end
-  end
-end
+  def test_JRUBY_3773
+    b = Badger.new("Axel", 35)
 
-b = Badger.new("Axel", 35)
-
-assert_equal YAML::dump(b), <<OUT
+    assert_equal JvYAML::dump(b), <<OUT
 --- !ruby/Badger
 s: Axel:35
 OUT
-
-
-# JRUBY-3751
-
-class ControlStruct < Struct.new(:arg1)
-end
-
-class BadStruct < Struct.new(:arg1)
-  def initialize(a1)
-    self.arg1 = a1
-  end
-end
-
-class ControlObject
-  attr_accessor :arg1
-
-  def initialize(a1)
-    self.arg1 = a1
   end
 
-  def ==(o)
-    self.arg1 == o.arg1
+  class ControlStruct < Struct.new(:arg1)
   end
-end
 
-class_obj1  = ControlObject.new('class_value')
-struct_obj1 = ControlStruct.new
-struct_obj1.arg1 = 'control_value'
-struct_obj2 = BadStruct.new('struct_value')
-
-assert_equal JvYAML.load(class_obj1.to_jvyaml), class_obj1
-assert_equal JvYAML.load(struct_obj1.to_jvyaml), struct_obj1
-assert_equal JvYAML.load(struct_obj2.to_jvyaml), struct_obj2
-
-
-# JRUBY-3518
-class Sample
-  attr_reader :key
-  def yaml_initialize( tag, val )
-    @key = 'yaml initialize'
+  class BadStruct < Struct.new(:arg1)
+    def initialize(a1)
+        self.arg1 = a1
+    end
   end
-end
 
-class SampleHash < Hash
-  attr_reader :key
-  def yaml_initialize( tag, val )
-    @key = 'yaml initialize'
+  class ControlObject
+    attr_accessor :arg1
+
+    def initialize(a1)
+        self.arg1 = a1
+    end
+
+    def ==(o)
+        self.arg1 == o.arg1
+    end
   end
-end
 
-class SampleArray < Array
-  attr_reader :key
-  def yaml_initialize( tag, val )
-    @key = 'yaml initialize'
+  def test_JRUBY_3751
+    class_obj1  = ControlObject.new('class_value')
+    struct_obj1 = ControlStruct.new
+    struct_obj1.arg1 = 'control_value'
+    struct_obj2 = BadStruct.new('struct_value')
+
+    assert_equal JvYAML.load(class_obj1.to_jvyaml), class_obj1
+    assert_equal JvYAML.load(struct_obj1.to_jvyaml), struct_obj1
+    assert_equal JvYAML.load(struct_obj2.to_jvyaml), struct_obj2
   end
-end
 
-s = JvYAML.load(JvYAML.dump(Sample.new))
-assert_equal 'yaml initialize', s.key
+  class Sample
+    attr_reader :key
+    def jvyaml_initialize( tag, val )
+      @key = 'yaml initialize'
+    end
+  end
 
-s = JvYAML.load(JvYAML.dump(SampleHash.new))
-assert_equal 'yaml initialize', s.key
+  class SampleHash < Hash
+    attr_reader :key
+    def yaml_initialize( tag, val )
+      @key = 'yaml initialize'
+    end
+  end
 
-s = JvYAML.load(JvYAML.dump(SampleArray.new))
-assert_equal 'yaml initialize', s.key
+  class SampleArray < Array
+    attr_reader :key
+    def jvyaml_initialize( tag, val )
+      @key = 'yaml initialize'
+    end
+  end
 
+  def test_JRUBY_3518
+    s = JvYAML.load(JvYAML.dump(Sample.new))
+    assert_equal 'yaml initialize', s.key
 
-# JRUBY-3327
+    s = JvYAML.load(JvYAML.dump(SampleHash.new))
+    assert_equal 'yaml initialize', s.key
 
-assert_equal JvYAML.load("- foo\n  bar: bazz"), [{"foo bar" => "bazz"}]
+    s = JvYAML.load(JvYAML.dump(SampleArray.new))
+    assert_equal 'yaml initialize', s.key
+  end
 
-# JRUBY-3263
-y = <<YAML
+  def test_JRUBY_3327
+    assert_equal JvYAML.load("- foo\n  bar: bazz"), [{"foo bar" => "bazz"}]
+  end
+
+  def test_JRUBY_3263
+    y = <<YAML
 production:
  ABQIAAAAinq15RDnRyoOaQwM_PoC4RTJQa0g3IQ9GZqIMmInSLzwtGDKaBTPoBdSu0WQaPTIv1sXhVRK0Kolfg
  example.com: ABQIAAAAzMUFFnT9uH0Sfg98Y4kbhGFJQa0g3IQ9GZqIMmInSLrthJKGDmlRT98f4j135zat56yjRKQlWnkmod3TB
 YAML
 
-assert_equal JvYAML.load(y)['production'], {"ABQIAAAAinq15RDnRyoOaQwM_PoC4RTJQa0g3IQ9GZqIMmInSLzwtGDKaBTPoBdSu0WQaPTIv1sXhVRK0Kolfg example.com" => "ABQIAAAAzMUFFnT9uH0Sfg98Y4kbhGFJQa0g3IQ9GZqIMmInSLrthJKGDmlRT98f4j135zat56yjRKQlWnkmod3TB"}
+    assert_equal JvYAML.load(y)['production'], {"ABQIAAAAinq15RDnRyoOaQwM_PoC4RTJQa0g3IQ9GZqIMmInSLzwtGDKaBTPoBdSu0WQaPTIv1sXhVRK0Kolfg example.com" => "ABQIAAAAzMUFFnT9uH0Sfg98Y4kbhGFJQa0g3IQ9GZqIMmInSLrthJKGDmlRT98f4j135zat56yjRKQlWnkmod3TB"}
+  end
 
-
-# JRUBY-3412
-y = "--- 2009-02-16 22::40:26.574754 -05:00\n"
-assert_equal JvYAML.load(y).to_jvyaml, y
+  def test_JRUBY_3412
+    y = "--- 2009-02-16 22::40:26.574754 -05:00\n"
+    assert_equal JvYAML.load(y).to_jvyaml, y
+  end
+end
