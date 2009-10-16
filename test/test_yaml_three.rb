@@ -6,43 +6,40 @@ class JvYAMLMoreUnitTests < Test::Unit::TestCase
     bad_text = %{
  A
 R}
-    dump = JvYAML.dump({'text' => bad_text})
-    loaded = JvYAML.load(dump)
+    dump = ::JvYAML.dump({'text' => bad_text})
+    loaded = ::JvYAML.load(dump)
     assert_equal bad_text, loaded['text']
   end
 
   def test_two
     # JRUBY-1903
-    assert_equal(<<YAML_OUT, JvYAML::JvYAML::Scalar.new("tag:yaml.org,2002:str","foobar",'').to_str)
+    assert_equal(<<YAML_OUT, ::JvYAML::JvYAMLi::Scalar.new("tag:yaml.org,2002:str","foobar",'').to_str)
 --- foobar
 YAML_OUT
 
-    assert_equal(<<YAML_OUT, JvYAML::JvYAML::Scalar.new("tag:yaml.org,2002:str","foobar",'').to_s)
+    assert_equal(<<YAML_OUT, ::JvYAML::JvYAMLi::Scalar.new("tag:yaml.org,2002:str","foobar",'').to_s)
 --- foobar
 YAML_OUT
 
-    assert_equal(<<YAML_OUT, JvYAML::JvYAML::Seq.new("tag:yaml.org,2002:seq",[JvYAML::JvYAML::Scalar.new("tag:yaml.org,2002:str","foobar",'')],'').to_str)
+    assert_equal(<<YAML_OUT, ::JvYAML::JvYAMLi::Seq.new("tag:yaml.org,2002:seq",[::JvYAML::JvYAMLi::Scalar.new("tag:yaml.org,2002:str","foobar",'')],'').to_str)
 --- [foobar]
 
 YAML_OUT
 
-    assert_equal(<<YAML_OUT, JvYAML::JvYAML::Seq.new("tag:yaml.org,2002:seq",[JvYAML::JvYAML::Scalar.new("tag:yaml.org,2002:str","foobar",'')],'').to_s)
+    assert_equal(<<YAML_OUT, ::JvYAML::JvYAMLi::Seq.new("tag:yaml.org,2002:seq",[::JvYAML::JvYAMLi::Scalar.new("tag:yaml.org,2002:str","foobar",'')],'').to_s)
 --- [foobar]
 
 YAML_OUT
 
-    assert_equal(<<YAML_OUT, JvYAML::JvYAML::Map.new("tag:yaml.org,2002:map",{JvYAML::JvYAML::Scalar.new("tag:yaml.org,2002:str","a",'') => JvYAML::JvYAML::Scalar.new("tag:yaml.org,2002:str","b",'')},'').to_str)
+    assert_equal(<<YAML_OUT, ::JvYAML::JvYAMLi::Map.new("tag:yaml.org,2002:map",{::JvYAML::JvYAMLi::Scalar.new("tag:yaml.org,2002:str","a",'') => ::JvYAML::JvYAMLi::Scalar.new("tag:yaml.org,2002:str","b",'')},'').to_str)
 --- {a: b}
 
 YAML_OUT
 
-    assert_equal(<<YAML_OUT, JvYAML::JvYAML::Map.new("tag:yaml.org,2002:map",{JvYAML::JvYAML::Scalar.new("tag:yaml.org,2002:str","a",'') => JvYAML::JvYAML::Scalar.new("tag:yaml.org,2002:str","b",'')},'').to_s)
+    assert_equal(<<YAML_OUT, ::JvYAML::JvYAMLi::Map.new("tag:yaml.org,2002:map",{::JvYAML::JvYAMLi::Scalar.new("tag:yaml.org,2002:str","a",'') => ::JvYAML::JvYAMLi::Scalar.new("tag:yaml.org,2002:str","b",'')},'').to_s)
 --- {a: b}
-YAML_OUT
-  end
 
-  def test_three
-    assert(["--- !str \nstr: foo\n'@bar': baz\n", "--- !str \n'@bar': baz\nstr: foo\n"].include?(a_str.to_jvyaml))
+YAML_OUT
   end
 
   def test_four
@@ -83,19 +80,19 @@ YAML_OUT
   def test_five
     hash = { "element" => "value", "array" => [ { "nested_element" => "nested_value" } ] }
     ex1 = <<EXPECTED
----
-array:
+--- 
+array: 
 - nested_element: nested_value
 element: value
 EXPECTED
 
     ex2 = <<EXPECTED
----
+--- 
 element: value
-array:
+array: 
 - nested_element: nested_value
 EXPECTED
 
-    assert [ex1, ex2].include?(hash.to_jvyaml)
+    assert [ex1, ex2].include?(hash.to_jvyaml), "was: #{hash.to_jvyaml.inspect}"
   end
 end

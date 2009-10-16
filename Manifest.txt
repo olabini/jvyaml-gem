@@ -1,8 +1,8 @@
 Manifest.txt
 Rakefile
+lib/jvyaml.rb
 lib/jvyaml/store.rb
 lib/jvyaml/syck.rb
-lib/jvyaml.rb
 lib/jvyamlb.jar
 lib/jvyaml_internal.jar
 test/test_yaml_one.rb

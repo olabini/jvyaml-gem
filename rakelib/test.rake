@@ -1,3 +1,3 @@
-Rake::TestTask.new(:test) do |t|
+Rake::TestTask.new do |t|
   t.test_files = FileList['test/**/test*.rb']
 end

@@ -2,8 +2,8 @@
 
 module JvYAML
   module Syck
-    Map = ::JvYAML::JvYAML::Map
-    Seq = ::JvYAML::JvYAML::Seq
-    Scalar = ::JvYAML::JvYAML::Scalar
+    Map = ::JvYAML::JvYAMLi::Map
+    Seq = ::JvYAML::JvYAMLi::Seq
+    Scalar = ::JvYAML::JvYAMLi::Scalar
   end
 end

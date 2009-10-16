@@ -125,7 +125,7 @@ public class JRubyRepresenter extends SafeRepresenterImpl {
         public IRubyObjectYAMLNodeCreator(final Object data) {
             this.data = (IRubyObject)data;
             this.YAMLModule = (RubyModule)this.data.getRuntime().getModule("JvYAML");
-            this.outClass = ((RubyClass)((RubyModule)(YAMLModule.getConstant("JvYAML"))).getConstant("Node"));
+            this.outClass = ((RubyClass)((RubyModule)(YAMLModule.getConstant("JvYAMLi"))).getConstant("Node"));
         }
 
         public String taguri() {
@@ -168,7 +168,7 @@ public class JRubyRepresenter extends SafeRepresenterImpl {
                         }
                     }
 
-                    throw runtime.newTypeError("wrong argument type " + val.getMetaClass().getRealClass() + " (expected JvYAML::JvYAML::Node)");
+                    throw runtime.newTypeError("wrong argument type " + val.getMetaClass().getRealClass() + " (expected JvYAML::JvYAMLi::Node)");
                 } else {
                     IRubyObject value = val.callMethod(context, "value");
                     IRubyObject style = val.callMethod(context, "style");

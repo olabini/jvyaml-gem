@@ -520,7 +520,7 @@ public class RubyYAML {
             if(self.callMethod(context, "is_jv_binary_data?").isTrue()) {
                 return RuntimeHelpers.invoke(context, arg, "scalar", rt.newString("tag:yaml.org,2002:binary"), rt.newArray(self).callMethod(context, "pack", rt.newString("m")), rt.newString("|"));
             }
-            if(((List)self.callMethod(context, "to_jv_yaml_properties")).isEmpty()) {
+            if(((List)self.callMethod(context, "to_jvyaml_properties")).isEmpty()) {
                 JRubyRepresenter rep = into(arg);
                 if(rep != null) {
                     try {

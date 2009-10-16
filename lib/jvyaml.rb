@@ -1,8 +1,9 @@
 require 'java' #needed for the module JavaUtilities, which JavaEmbedUtils have a dependency on
 require 'date'
+require 'jvyamlb.jar' # add Java library to path
 require 'jvyaml_internal'
 
-class Java::OrgJrubyYaml::JRubyRepresenter
+class Java::OrgJrubyExtJvyaml::JRubyRepresenter
   def kind_of?(other)
     if other == JvYAML::Emitter
       return true
@@ -26,7 +27,7 @@ module JvYAML
   class Error < StandardError; end
 
   def self.parse(obj)
-    JvYAML::JvYAML::Node::from_internal(JvYAML::_parse_internal(obj)) || false
+    ::JvYAML::JvYAMLi::Node::from_internal(::JvYAML::_parse_internal(obj)) || false
   end
 
   def JvYAML.parse_file( filepath )
@@ -61,7 +62,7 @@ module JvYAML
 
   class Emitter
     def initialize
-      @out = JvYAML::JvYAML::Out.new self
+      @out = ::JvYAML::JvYAMLi::Out.new self
     end
 
     def reset(opts)
@@ -109,7 +110,7 @@ module JvYAML
     out.emit( oid, &e )
   end
 
-  module JvYAML
+  module JvYAMLi
     class Out
       attr_accessor :emitter
 
@@ -312,7 +313,7 @@ module JvYAML
     #
     #  tag:why@ruby-lang.org,2004:notes/personal
     #
-    def JvYAML.tag_class( tag, cls )
+    def self.tag_class( tag, cls )
         if @@tagged_classes.has_key? tag
             warn "class #{ @@tagged_classes[tag] } held ownership of the #{ tag } tag"
         end
@@ -325,7 +326,7 @@ module JvYAML
     #
     #  JvYAML.tagged_classes["tag:yaml.org,2002:int"] => Integer
     #
-    def JvYAML.tagged_classes
+    def self.tagged_classes
         @@tagged_classes
     end
 end
