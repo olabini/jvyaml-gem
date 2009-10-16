@@ -135,27 +135,23 @@ class JvYAMLUnitTests < Test::Unit::TestCase
     a = {:x => need_to_be_serialized.to_yaml}
     assert_equal need_to_be_serialized, YAML.load(YAML.load(a.to_yaml)[:x])
   end
-end
 
+  def test_JRUBY_1220
+    bad_text = " A\nR"
+    dump = YAML.dump({'text' => bad_text})
+    loaded = YAML.load(dump)
+    assert_equal bad_text, loaded['text']
 
-
-__END__
-
-# JRUBY-1220 - make sure all three variations work
-bad_text = " A\nR"
-dump = YAML.dump({'text' => bad_text})
-loaded = YAML.load(dump)
-assert_equal bad_text, loaded['text']
-
-bad_text = %{
+    bad_text = %{
  ActiveRecord::StatementInvalid in ProjectsController#confirm_delete
 RuntimeError: ERROR	C23503	Mupdate or delete on "projects" violates foreign
     }
-dump = YAML.dump({'text' => bad_text})
-loaded = YAML.load(dump)
-assert_equal bad_text, loaded['text']
 
-string = <<-YAML
+    dump = YAML.dump({'text' => bad_text})
+    loaded = YAML.load(dump)
+    assert_equal bad_text, loaded['text']
+
+    string = <<-YAML
 outer
   property1: value1
   additional:
@@ -164,16 +160,14 @@ outer
     data: SELECT 'xxxxxxxxxxxxxxxxxxx', COUNT(*) WHERE xyzabc = 'unk'
     combine: overlay-bottom
 YAML
-assert_equal string, YAML.load(YAML.dump(string))
+    assert_equal string, YAML.load(YAML.dump(string))
+  end
 
+  def test_whitespace_variations
+    text = " "*80 + "\n" + " "*30
+    assert_equal text, YAML.load(YAML.dump(text))
 
-
-
-
-text = " "*80 + "\n" + " "*30
-assert_equal text, YAML.load(YAML.dump(text))
-
-text = <<-YAML
+    text = <<-YAML
   - label: New
     color: green
     data: SELECT 'Iteration Scheduled', COUNT(*) WHERE Status = 'New'
@@ -195,9 +189,9 @@ text = <<-YAML
                     combine: total
 YAML
 
-assert_equal text, YAML.load(YAML.dump(text))
+    assert_equal text, YAML.load(YAML.dump(text))
 
-text = <<-YAML
+    text = <<-YAML
 stack-bar-chart
   conditions: 'Release' in (R1) and not 'Iteration Scheduled' = null
   labels: SELECT DISTINCT 'Iteration Scheduled' ORDER BY 'Iteration Scheduled'
@@ -225,75 +219,84 @@ stack-bar-chart
     combine: total
 YAML
 
-assert_equal text, YAML.load(YAML.dump(text))
+    assert_equal text, YAML.load(YAML.dump(text))
+  end
 
-text = <<YAML
+  def test_nested_stuff
+    text = <<YAML
 valid_key:
 key1: value
 invalid_key
 akey: blah
 YAML
 
-test_exception(ArgumentError) do
-  YAML.load(text)
-end
-
-def roundtrip(text)
-  assert_equal text, YAML.load(YAML.dump(text))
-end
-
-roundtrip("C VW\205\v\321XU\346")
-roundtrip("\n8 xwKmjHG")
-roundtrip("1jq[\205qIB\ns")
-roundtrip("\rj\230fso\304\nEE")
-roundtrip("ks]qkYM\2073Un\317\nL\346Yp\204 CKMfFcRDFZ\vMNk\302fQDR<R\v \314QUa\234P\237s aLJnAu \345\262Wqm_W\241\277J\256ILKpPNsMPuok")
-
-def fuzz_roundtrip(str)
-  str.gsub! "\n ", "\n"
-  out = YAML.load(YAML.dump(str))
-  assert_equal str, out
-end
-
-values = (1..255).to_a
-values.delete(13)
-more = ('a'..'z').to_a + ('A'..'Z').to_a
-blanks = [' ', "\t", "\n"]
-
-types = [more*10 + blanks*2, values + more*10 + blanks*2, values + more*10 + blanks*20]
-sizes = [10, 81, 214]
-
-errors = []
-types.each do |t|
-  sizes.each do |s|
-    1000.times do |vv|
-      val = ""
-      s.times do
-        val << t[rand(t.length)]
-      end
-      fuzz_roundtrip(val)
+    assert_raises(ArgumentError) do
+      YAML.load(text)
     end
   end
-end
 
-test_no_exception do
-  YAML.load_file("test/yaml/does_not_work.yml")
-end
+  def roundtrip(text)
+    assert_equal text, YAML.load(YAML.dump(text))
+  end
 
-roundtrip :"1"
+  def test_weird_stuff
+    roundtrip("C VW\205\v\321XU\346")
+    roundtrip("\n8 xwKmjHG")
+    roundtrip("1jq[\205qIB\ns")
+    roundtrip("\rj\230fso\304\nEE")
+    roundtrip("ks]qkYM\2073Un\317\nL\346Yp\204 CKMfFcRDFZ\vMNk\302fQDR<R\v \314QUa\234P\237s aLJnAu \345\262Wqm_W\241\277J\256ILKpPNsMPuok")
+    roundtrip :"1"
+  end
 
+  def fuzz_roundtrip(str)
+    str.gsub! "\n ", "\n"
+    out = YAML.load(YAML.dump(str))
+    assert_equal str, out
+  end
 
-# Fix for JRUBY-1471
-class YamlTest
-  def initialize
-    @test = Hash.new
-    @test["hello"] = "foo"
+  values = (1..255).to_a
+  values.delete(13)
+  more = ('a'..'z').to_a + ('A'..'Z').to_a
+  blanks = [' ', "\t", "\n"]
+
+  types = [more*10 + blanks*2, values + more*10 + blanks*2, values + more*10 + blanks*20]
+  sizes = [10, 81, 214]
+
+  errors = []
+  num = 0
+  types.each do |t|
+    sizes.each do |s|
+      1000.times do |vv|
+        val = ""
+        s.times do
+          val << t[rand(t.length)]
+        end
+        define_method :"test_fuzz_#{num+=1}" do
+          fuzz_roundtrip(val)
+        end
+      end
+    end
+  end
+
+  class YamlTest
+    def initialize
+      @test = Hash.new
+      @test["hello"] = "foo"
+    end
+  end
+
+  def test_JRUBY_1471
+    list = [YamlTest.new, YamlTest.new, YamlTest.new]
+    assert_equal 3, list.map{ |ll| ll.object_id }.uniq.length
+    list2 = YAML.load(YAML.dump(list))
+    assert_equal 3, list2.map{ |ll| ll.object_id }.uniq.length
   end
 end
 
-list = [YamlTest.new, YamlTest.new, YamlTest.new]
-assert_equal 3, list.map{ |ll| ll.object_id }.uniq.length
-list2 = YAML.load(YAML.dump(list))
-assert_equal 3, list2.map{ |ll| ll.object_id }.uniq.length
+__END__
+
+
+
 
 # JRUBY-1659
 YAML.load("{a: 2007-01-01 01:12:34}")
