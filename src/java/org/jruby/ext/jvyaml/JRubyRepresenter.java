@@ -124,7 +124,7 @@ public class JRubyRepresenter extends SafeRepresenterImpl {
 
         public IRubyObjectYAMLNodeCreator(final Object data) {
             this.data = (IRubyObject)data;
-            this.YAMLModule = (RubyModule)this.data.getRuntime().getModule("YAML");
+            this.YAMLModule = (RubyModule)this.data.getRuntime().getModule("JvYAML");
             this.outClass = ((RubyClass)((RubyModule)(YAMLModule.getConstant("JvYAML"))).getConstant("Node"));
         }
 
@@ -136,18 +136,18 @@ public class JRubyRepresenter extends SafeRepresenterImpl {
             Ruby runtime = data.getRuntime();
             ThreadContext context = runtime.getCurrentContext();
 
-            if(data.getMetaClass().searchMethod("to_yaml") == YAMLModule.dataGetStruct() ||
-               data.getMetaClass().searchMethod("to_yaml").isUndefined() // In this case, hope that it works out correctly when calling to_yaml_node. Rails does this.
+            if(data.getMetaClass().searchMethod("to_jvyaml") == YAMLModule.dataGetStruct() ||
+               data.getMetaClass().searchMethod("to_jvyaml").isUndefined() // In this case, hope that it works out correctly when calling to_yaml_node. Rails does this.
                ) {
                 // to_yaml have not been overridden
-                Object val = data.callMethod(context, "to_yaml_node", JavaEmbedUtils.javaToRuby(runtime, representer));
+                Object val = data.callMethod(context, "to_jvyaml_node", JavaEmbedUtils.javaToRuby(runtime, representer));
                 if(val instanceof Node) {
                     return (Node)val;
                 } else if(val instanceof IRubyObject) {
                     return (Node)JavaEmbedUtils.rubyToJava((IRubyObject) val);
                 }
             } else {
-                IRubyObject val = data.callMethod(context, "to_yaml", JavaEmbedUtils.javaToRuby(runtime, representer));
+                IRubyObject val = data.callMethod(context, "to_jvyaml", JavaEmbedUtils.javaToRuby(runtime, representer));
 
                 if(!outClass.isInstance(val)) {
                     if(val instanceof RubyString && ((RubyString)val).getByteList().length() > 4) {
@@ -168,7 +168,7 @@ public class JRubyRepresenter extends SafeRepresenterImpl {
                         }
                     }
 
-                    throw runtime.newTypeError("wrong argument type " + val.getMetaClass().getRealClass() + " (expected YAML::JvYAML::Node)");
+                    throw runtime.newTypeError("wrong argument type " + val.getMetaClass().getRealClass() + " (expected JvYAML::JvYAML::Node)");
                 } else {
                     IRubyObject value = val.callMethod(context, "value");
                     IRubyObject style = val.callMethod(context, "style");

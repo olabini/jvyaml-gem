@@ -142,7 +142,7 @@ public class JRubyConstructor extends ConstructorImpl {
         }
         return RuntimeHelpers.invoke(
                 runtime.getCurrentContext(),
-                runtime.fastGetModule("YAML").fastGetConstant("PrivateType"),
+                runtime.fastGetModule("JvYAML").fastGetConstant("PrivateType"),
                 "new", runtime.newString(node.getTag()),(IRubyObject)val);
     }
 
@@ -187,7 +187,7 @@ public class JRubyConstructor extends ConstructorImpl {
 
     public static Object constructYamlOmap(final Constructor ctor, final Node node) {
         Ruby runtime = ((JRubyConstructor)ctor).runtime;
-        RubyArray arr = (RubyArray)(runtime.fastGetModule("YAML").fastGetConstant("Omap").callMethod(runtime.getCurrentContext(),"new"));
+        RubyArray arr = (RubyArray)(runtime.fastGetModule("JvYAML").fastGetConstant("Omap").callMethod(runtime.getCurrentContext(),"new"));
         List l = (List)ctor.constructSequence(node);
         ctor.doRecursionFix(node, arr);
         for(Iterator iter = l.iterator();iter.hasNext();) {
@@ -276,7 +276,7 @@ public class JRubyConstructor extends ConstructorImpl {
                 }
             } catch(Exception e) {
                 // No constant available, so we'll fall back on YAML::Object
-                objClass = (RubyClass)runtime.fastGetModule("YAML").fastGetConstant("Object");
+                objClass = (RubyClass)runtime.fastGetModule("JvYAML").fastGetConstant("Object");
                 final RubyHash vars = (RubyHash)(((JRubyConstructor)ctor).constructRubyMapping(node));
                 return RuntimeHelpers.invoke(runtime.getCurrentContext(), objClass, "new", runtime.newString(tag), vars);
             }
@@ -350,14 +350,14 @@ public class JRubyConstructor extends ConstructorImpl {
 
     public static Object constructRuby(final Constructor ctor, final RubyClass theCls, final Node node) {
         final Ruby runtime = ((JRubyConstructor)ctor).runtime;
-        if(theCls.respondsTo("yaml_new")) {
+        if(theCls.respondsTo("jvyaml_new")) {
             final RubyHash vars = (RubyHash)(((JRubyConstructor)ctor).constructRubyMapping(node));
-            return RuntimeHelpers.invoke(runtime.getCurrentContext(), theCls, "yaml_new", theCls, runtime.newString(node.getTag()), vars);
+            return RuntimeHelpers.invoke(runtime.getCurrentContext(), theCls, "jvyaml_new", theCls, runtime.newString(node.getTag()), vars);
         } else {
             final RubyObject oo = (RubyObject)theCls.getAllocator().allocate(runtime, theCls);
-            if (oo.respondsTo("yaml_initialize")) {
+            if (oo.respondsTo("jvyaml_initialize")) {
                 RubyHash vars = (RubyHash)(((JRubyConstructor)ctor).constructRubyMapping(node));
-                RuntimeHelpers.invoke(runtime.getCurrentContext(), oo, "yaml_initialize", runtime.newString(node.getTag()), vars);
+                RuntimeHelpers.invoke(runtime.getCurrentContext(), oo, "jvyaml_initialize", runtime.newString(node.getTag()), vars);
             } else {
                 final Map vars = (Map)(ctor.constructMapping(node));
                 ctor.doRecursionFix(node, oo);
@@ -391,7 +391,7 @@ public class JRubyConstructor extends ConstructorImpl {
                 }
             } catch(Exception e) {
                 // No constant available, so we'll fall back on YAML::Object
-                objClass = (RubyClass)runtime.fastGetModule("YAML").fastGetConstant("Object");
+                objClass = (RubyClass)runtime.fastGetModule("JvYAML").fastGetConstant("Object");
                 final RubyHash vars = (RubyHash)(((JRubyConstructor)ctor).constructRubyMapping(node));
                 return RuntimeHelpers.invoke(runtime.getCurrentContext(), objClass, "new", runtime.newString(tag), vars);
             }
@@ -425,8 +425,8 @@ public class JRubyConstructor extends ConstructorImpl {
                 first = s1.substring(0,ix);
                 second = s1.substring(ix+2);
             }
-            IRubyObject fist = runtime.fastGetModule("YAML").callMethod(context,"load",runtime.newString(first));
-            IRubyObject sic = runtime.fastGetModule("YAML").callMethod(context,"load",runtime.newString(second));
+            IRubyObject fist = runtime.fastGetModule("JvYAML").callMethod(context,"load",runtime.newString(first));
+            IRubyObject sic = runtime.fastGetModule("JvYAML").callMethod(context,"load",runtime.newString(second));
             return RubyRange.newRange(runtime, context, fist, sic, exc);
         } else {
             final Map vars = (Map)(ctor.constructMapping(node));
@@ -440,7 +440,7 @@ public class JRubyConstructor extends ConstructorImpl {
     public static Object findAndCreateFromCustomTagging(final Constructor ctor, final Node node) {
         String tag = node.getTag();
         Ruby runtime = ((JRubyConstructor)ctor).runtime;
-        IRubyObject _cl = runtime.fastGetModule("YAML").callMethod(runtime.getCurrentContext(), "tagged_classes").callMethod(runtime.getCurrentContext(),"[]", runtime.newString(tag));
+        IRubyObject _cl = runtime.fastGetModule("JvYAML").callMethod(runtime.getCurrentContext(), "tagged_classes").callMethod(runtime.getCurrentContext(),"[]", runtime.newString(tag));
         if(!(_cl instanceof RubyClass)) {
             return null;
         }

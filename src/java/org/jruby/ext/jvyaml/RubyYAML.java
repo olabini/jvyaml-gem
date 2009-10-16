@@ -63,7 +63,7 @@ import org.jvyamlb.Position;
 @JRubyModule(name="YAML")
 public class RubyYAML {
     public static RubyModule createYAMLModule(Ruby runtime) {
-        RubyModule result = runtime.defineModule("YAML");
+        RubyModule result = runtime.defineModule("JvYAML");
 
         runtime.getKernel().callMethod(runtime.getCurrentContext(),"require", runtime.newString("stringio"));
 
@@ -124,7 +124,7 @@ public class RubyYAML {
 
         nilClass.defineAnnotatedMethods(YAMLNilMethods.class);
 
-        result.dataWrapStruct(runtime.getObject().searchMethod("to_yaml"));
+        result.dataWrapStruct(runtime.getObject().searchMethod("to_jvyaml"));
 
         return result;
     }
@@ -332,7 +332,7 @@ public class RubyYAML {
                 ;
             while(ctor.checkData()) {
                 if(d.isNil()) {
-                    d = self.getRuntime().fastGetModule("YAML").fastGetClass("Stream").callMethod(context,"new", d);
+                    d = self.getRuntime().fastGetModule("JvYAML").fastGetClass("Stream").callMethod(context,"new", d);
                 }
                 d.callMethod(context,"add", JavaEmbedUtils.javaToRuby(self.getRuntime(),ctor.getData()));
             }
@@ -350,7 +350,7 @@ public class RubyYAML {
     @JRubyMethod(name = "dump_stream", rest = true, module = true, visibility = Visibility.PRIVATE)
     public static IRubyObject dump_stream(IRubyObject self, IRubyObject[] args) {
         ThreadContext context = self.getRuntime().getCurrentContext();
-        IRubyObject stream = self.getRuntime().fastGetModule("YAML").fastGetClass("Stream").callMethod(context, "new");
+        IRubyObject stream = self.getRuntime().fastGetModule("JvYAML").fastGetClass("Stream").callMethod(context, "new");
         for(int i=0,j=args.length;i<j;i++) {
             stream.callMethod(context,"add", args[i]);
         }
@@ -386,45 +386,45 @@ public class RubyYAML {
 
     @JRubyClass(name="Hash")
     public static class YAMLHashMethods {
-        @JRubyMethod(name = "to_yaml_node", required = 1)
+        @JRubyMethod(name = "to_jvyaml_node", required = 1)
         public static IRubyObject hash_to_yaml_node(IRubyObject self, IRubyObject arg) {
             Ruby runtime = self.getRuntime();
             ThreadContext context = runtime.getCurrentContext();
-            return RuntimeHelpers.invoke(context, arg, "map", self.callMethod(context, "taguri"), self, self.callMethod(context, "to_yaml_style"));
+            return RuntimeHelpers.invoke(context, arg, "map", self.callMethod(context, "jv_taguri"), self, self.callMethod(context, "to_jvyaml_style"));
         }
     }
 
     @JRubyClass(name="Object")
     public static class YAMLObjectMethods {
-        @JRubyMethod(name = "to_yaml_properties")
+        @JRubyMethod(name = "to_jvyaml_properties")
         public static IRubyObject obj_to_yaml_properties(IRubyObject self) {
             ThreadContext context = self.getRuntime().getCurrentContext();
             return self.callMethod(context, "instance_variables").callMethod(context, "sort");
         }
-        @JRubyMethod(name = "to_yaml_style")
+        @JRubyMethod(name = "to_jvyaml_style")
         public static IRubyObject obj_to_yaml_style(IRubyObject self) {
             return self.getRuntime().getNil();
         }
-        @JRubyMethod(name = "to_yaml_node", required = 1)
+        @JRubyMethod(name = "to_jvyaml_node", required = 1)
         public static IRubyObject obj_to_yaml_node(IRubyObject self, IRubyObject arg) {
             ThreadContext context = self.getRuntime().getCurrentContext();
             Map mep = (Map)(new RubyHash(self.getRuntime()));
-            RubyArray props = (RubyArray)self.callMethod(context, "to_yaml_properties");
+            RubyArray props = (RubyArray)self.callMethod(context, "to_jvyaml_properties");
             for(Iterator iter = props.getList().iterator(); iter.hasNext();) {
                 String m = iter.next().toString();
                 mep.put(self.getRuntime().newString(m.substring(1)), self.callMethod(context,"instance_variable_get", self.getRuntime().newString(m)));
             }
-            return RuntimeHelpers.invoke(context, arg, "map", self.callMethod(context, "taguri"), (IRubyObject)mep, self.callMethod(context, "to_yaml_style"));
+            return RuntimeHelpers.invoke(context, arg, "map", self.callMethod(context, "jv_taguri"), (IRubyObject)mep, self.callMethod(context, "to_jvyaml_style"));
         }
-        @JRubyMethod(name = "to_yaml")
+        @JRubyMethod(name = "to_jvyaml")
         public static IRubyObject obj_to_yaml(IRubyObject self) {
-            return dump(self.getRuntime().fastGetModule("YAML"), self);
+            return dump(self.getRuntime().fastGetModule("JvYAML"), self);
         }
-        @JRubyMethod(name = "to_yaml")
+        @JRubyMethod(name = "to_jvyaml")
         public static IRubyObject obj_to_yaml(IRubyObject self, IRubyObject opts) {
-            return dump(self.getRuntime().fastGetModule("YAML"), self);
+            return dump(self.getRuntime().fastGetModule("JvYAML"), self);
         }
-        @JRubyMethod(name = "taguri")
+        @JRubyMethod(name = "jv_taguri")
         public static IRubyObject obj_taguri(IRubyObject self) {
             return self.getRuntime().newString("!ruby/object:" + self.getType().getName());
         }
@@ -432,7 +432,7 @@ public class RubyYAML {
 
     @JRubyClass(name="Class")
     public static class YAMLClassMethods {
-        @JRubyMethod(name = "to_yaml", rest = true)
+        @JRubyMethod(name = "to_jvyaml", rest = true)
         public static IRubyObject class_to_yaml(IRubyObject self, IRubyObject[] args) {
             throw self.getRuntime().newTypeError("can't dump anonymous class " + self.getType().getName());
         }
@@ -440,16 +440,16 @@ public class RubyYAML {
 
     @JRubyClass(name="Array")
     public static class YAMLArrayMethods {
-        @JRubyMethod(name = "to_yaml_node", required = 1)
+        @JRubyMethod(name = "to_jvyaml_node", required = 1)
         public static IRubyObject array_to_yaml_node(IRubyObject self, IRubyObject arg) {
             ThreadContext context = self.getRuntime().getCurrentContext();
-            return RuntimeHelpers.invoke(context, arg, "seq", self.callMethod(context, "taguri"), self, self.callMethod(context, "to_yaml_style"));
+            return RuntimeHelpers.invoke(context, arg, "seq", self.callMethod(context, "jv_taguri"), self, self.callMethod(context, "to_jvyaml_style"));
         }
     }
 
     @JRubyClass(name="Struct")
     public static class YAMLStructMethods {
-        @JRubyMethod(name = "to_yaml_node", required = 1)
+        @JRubyMethod(name = "to_jvyaml_node", required = 1)
         public static IRubyObject struct_to_yaml_node(IRubyObject self, IRubyObject arg) {
             ThreadContext context = self.getRuntime().getCurrentContext();
             Map mep = (Map)(new RubyHash(self.getRuntime()));
@@ -457,13 +457,13 @@ public class RubyYAML {
                 IRubyObject key = self.getRuntime().newString(iter.next().toString());
                 mep.put(key,self.callMethod(context, "[]", key));
             }
-            for(Iterator iter = ((RubyArray)self.callMethod(context, "to_yaml_properties")).getList().iterator(); iter.hasNext();) {
+            for(Iterator iter = ((RubyArray)self.callMethod(context, "to_jvyaml_properties")).getList().iterator(); iter.hasNext();) {
                 String m = iter.next().toString();
                 mep.put(self.getRuntime().newString(m.substring(1)), self.callMethod(context,"instance_variable_get", self.getRuntime().newString(m)));
             }
-            return RuntimeHelpers.invoke(context, arg, "map", self.callMethod(context, "taguri"), (IRubyObject)mep, self.callMethod(context, "to_yaml_style"));
+            return RuntimeHelpers.invoke(context, arg, "map", self.callMethod(context, "jv_taguri"), (IRubyObject)mep, self.callMethod(context, "to_jvyaml_style"));
         }
-        @JRubyMethod(name = "taguri")
+        @JRubyMethod(name = "jv_taguri")
         public static IRubyObject struct_taguri(IRubyObject self) {
             return self.getRuntime().newString("!ruby/struct:" + self.getType().getName());
         }
@@ -471,18 +471,18 @@ public class RubyYAML {
 
     @JRubyClass(name="Exception")
     public static class YAMLExceptionMethods {
-        @JRubyMethod(name = "to_yaml_node", required = 1)
+        @JRubyMethod(name = "to_jvyaml_node", required = 1)
         public static IRubyObject exception_to_yaml_node(IRubyObject self, IRubyObject arg) {
             ThreadContext context = self.getRuntime().getCurrentContext();
             Map mep = (Map)(new RubyHash(self.getRuntime()));
             mep.put(self.getRuntime().newString("message"),self.callMethod(context, "message"));
-            for(Iterator iter = ((RubyArray)self.callMethod(context, "to_yaml_properties")).getList().iterator(); iter.hasNext();) {
+            for(Iterator iter = ((RubyArray)self.callMethod(context, "to_jvyaml_properties")).getList().iterator(); iter.hasNext();) {
                 String m = iter.next().toString();
                 mep.put(self.getRuntime().newString(m.substring(1)), self.callMethod(context,"instance_variable_get", self.getRuntime().newString(m)));
             }
-            return RuntimeHelpers.invoke(context, arg,"map", self.callMethod(context, "taguri"), (IRubyObject)mep, self.callMethod(context, "to_yaml_style"));
+            return RuntimeHelpers.invoke(context, arg,"map", self.callMethod(context, "jv_taguri"), (IRubyObject)mep, self.callMethod(context, "to_jvyaml_style"));
         }
-        @JRubyMethod(name = "taguri")
+        @JRubyMethod(name = "jv_taguri")
         public static IRubyObject exception_taguri(IRubyObject self) {
             return self.getRuntime().newString("!ruby/exception:" + self.getType().getName());
         }
@@ -491,14 +491,14 @@ public class RubyYAML {
     private static final Pattern AFTER_NEWLINE = Pattern.compile("\n.+", Pattern.DOTALL);
     @JRubyClass(name="String")
     public static class YAMLStringMethods {
-        @JRubyMethod(name = "is_complex_yaml?")
+        @JRubyMethod(name = "is_complex_jvyaml?")
         public static IRubyObject string_is_complex(IRubyObject self) {
             ThreadContext context = self.getRuntime().getCurrentContext();
-            return (self.callMethod(context, "to_yaml_style").isTrue() ||
-                    ((List)self.callMethod(context, "to_yaml_properties")).isEmpty() ||
+            return (self.callMethod(context, "to_jvyaml_style").isTrue() ||
+                    ((List)self.callMethod(context, "to_jvyaml_properties")).isEmpty() ||
                     AFTER_NEWLINE.matcher(self.toString()).find()) ? self.getRuntime().getTrue() : self.getRuntime().getFalse();
         }
-        @JRubyMethod(name = "is_binary_data?")
+        @JRubyMethod(name = "is_jv_binary_data?")
         public static IRubyObject string_is_binary(IRubyObject self) {
             ThreadContext context = self.getRuntime().getCurrentContext();
             if(self.callMethod(context, "empty?").isTrue()) {
@@ -513,44 +513,44 @@ public class RubyYAML {
             }
             return null;
         }
-        @JRubyMethod(name = "to_yaml_node", required = 1)
+        @JRubyMethod(name = "to_jvyaml_node", required = 1)
         public static IRubyObject string_to_yaml_node(IRubyObject self, IRubyObject arg) {
             ThreadContext context = self.getRuntime().getCurrentContext();
             Ruby rt = self.getRuntime();
-            if(self.callMethod(context, "is_binary_data?").isTrue()) {
+            if(self.callMethod(context, "is_jv_binary_data?").isTrue()) {
                 return RuntimeHelpers.invoke(context, arg, "scalar", rt.newString("tag:yaml.org,2002:binary"), rt.newArray(self).callMethod(context, "pack", rt.newString("m")), rt.newString("|"));
             }
-            if(((List)self.callMethod(context, "to_yaml_properties")).isEmpty()) {
+            if(((List)self.callMethod(context, "to_jv_yaml_properties")).isEmpty()) {
                 JRubyRepresenter rep = into(arg);
                 if(rep != null) {
                     try {
-                        return JavaUtil.convertJavaToRuby(rt,rep.scalar(self.callMethod(context, "taguri").toString(),self.convertToString().getByteList(),self.toString().startsWith(":") ? "\"" : self.callMethod(context, "to_yaml_style").toString()));
+                        return JavaUtil.convertJavaToRuby(rt,rep.scalar(self.callMethod(context, "jv_taguri").toString(),self.convertToString().getByteList(),self.toString().startsWith(":") ? "\"" : self.callMethod(context, "to_jvyaml_style").toString()));
                     } catch(IOException e) {
                         throw rt.newIOErrorFromException(e);
                     }
                 } else {
-                    return RuntimeHelpers.invoke(context, arg, "scalar", self.callMethod(context, "taguri"), self, self.toString().startsWith(":") ? rt.newString("\"") : self.callMethod(context, "to_yaml_style"));
+                    return RuntimeHelpers.invoke(context, arg, "scalar", self.callMethod(context, "jv_taguri"), self, self.toString().startsWith(":") ? rt.newString("\"") : self.callMethod(context, "to_jvyaml_style"));
                 }
             }
 
             Map mep = (Map)(new RubyHash(self.getRuntime()));
             mep.put(self.getRuntime().newString("str"),rt.newString(self.toString()));
-            for(Iterator iter = ((RubyArray)self.callMethod(context, "to_yaml_properties")).getList().iterator(); iter.hasNext();) {
+            for(Iterator iter = ((RubyArray)self.callMethod(context, "to_jvyaml_properties")).getList().iterator(); iter.hasNext();) {
                 String m = iter.next().toString();
                 mep.put(self.getRuntime().newString(m), self.callMethod(context,"instance_variable_get", self.getRuntime().newString(m)));
             }
-            return RuntimeHelpers.invoke(context, arg, "map", self.callMethod(context, "taguri"), (IRubyObject)mep, self.callMethod(context, "to_yaml_style"));
+            return RuntimeHelpers.invoke(context, arg, "map", self.callMethod(context, "jv_taguri"), (IRubyObject)mep, self.callMethod(context, "to_jvyaml_style"));
         }
     }
 
     @JRubyClass(name="Symbol")
     public static class YAMLSymbolMethods {
-        @JRubyMethod(name = "to_yaml_node", required = 1)
+        @JRubyMethod(name = "to_jvyaml_node", required = 1)
         public static IRubyObject symbol_to_yaml_node(IRubyObject self, IRubyObject arg) {
             ThreadContext context = self.getRuntime().getCurrentContext();
-            return RuntimeHelpers.invoke(context, arg, "scalar", self.callMethod(context, "taguri"), self.callMethod(context, "inspect"), self.callMethod(context, "to_yaml_style"));
+            return RuntimeHelpers.invoke(context, arg, "scalar", self.callMethod(context, "jv_taguri"), self.callMethod(context, "inspect"), self.callMethod(context, "to_jvyaml_style"));
         }
-        @JRubyMethod(name = "taguri")
+        @JRubyMethod(name = "jv_taguri")
         public static IRubyObject symbol_taguri(IRubyObject self) {
             return self.getRuntime().newString("tag:yaml.org,2002:str");
         }
@@ -558,7 +558,7 @@ public class RubyYAML {
 
     @JRubyClass(name="Numeric")
     public static class YAMLNumericMethods {
-        @JRubyMethod(name = "to_yaml_node", required = 1)
+        @JRubyMethod(name = "to_jvyaml_node", required = 1)
         public static IRubyObject numeric_to_yaml_node(IRubyObject self, IRubyObject arg) {
             ThreadContext context = self.getRuntime().getCurrentContext();
             String val = self.toString();
@@ -569,39 +569,39 @@ public class RubyYAML {
             } else if("NaN".equals(val)) {
                 val = ".NaN";
             }
-            return RuntimeHelpers.invoke(context, arg,"scalar", self.callMethod(context, "taguri"), self.getRuntime().newString(val), self.callMethod(context, "to_yaml_style"));
+            return RuntimeHelpers.invoke(context, arg,"scalar", self.callMethod(context, "jv_taguri"), self.getRuntime().newString(val), self.callMethod(context, "to_jvyaml_style"));
         }
     }
 
     @JRubyClass(name="Range")
     public static class YAMLRangeMethods {
-        @JRubyMethod(name = "to_yaml_node", required = 1)
+        @JRubyMethod(name = "to_jvyaml_node", required = 1)
         public static IRubyObject range_to_yaml_node(IRubyObject self, IRubyObject arg) {
             ThreadContext context = self.getRuntime().getCurrentContext();
             Map mep = (Map)(new RubyHash(self.getRuntime()));
             mep.put(self.getRuntime().newString("begin"),self.callMethod(context, "begin"));
             mep.put(self.getRuntime().newString("end"),self.callMethod(context, "end"));
             mep.put(self.getRuntime().newString("excl"),self.callMethod(context, "exclude_end?"));
-            for(Iterator iter = ((RubyArray)self.callMethod(context, "to_yaml_properties")).getList().iterator(); iter.hasNext();) {
+            for(Iterator iter = ((RubyArray)self.callMethod(context, "to_jvyaml_properties")).getList().iterator(); iter.hasNext();) {
                 String m = iter.next().toString();
                 mep.put(self.getRuntime().newString(m.substring(1)), self.callMethod(context,"instance_variable_get", self.getRuntime().newString(m)));
             }
-            return RuntimeHelpers.invoke(context, arg, "map", self.callMethod(context, "taguri"), (IRubyObject)mep, self.callMethod(context, "to_yaml_style"));
+            return RuntimeHelpers.invoke(context, arg, "map", self.callMethod(context, "jv_taguri"), (IRubyObject)mep, self.callMethod(context, "to_jvyaml_style"));
         }
     }
 
     @JRubyClass(name="Regexp")
     public static class YAMLRegexpMethods {
-        @JRubyMethod(name = "to_yaml_node", required = 1)
+        @JRubyMethod(name = "to_jvyaml_node", required = 1)
         public static IRubyObject regexp_to_yaml_node(IRubyObject self, IRubyObject arg) {
             ThreadContext context = self.getRuntime().getCurrentContext();
-            return RuntimeHelpers.invoke(context, arg, "scalar", self.callMethod(context, "taguri"), self.callMethod(context, "inspect"), self.callMethod(context, "to_yaml_style"));
+            return RuntimeHelpers.invoke(context, arg, "scalar", self.callMethod(context, "jv_taguri"), self.callMethod(context, "inspect"), self.callMethod(context, "to_jvyaml_style"));
         }
     }
 
     @JRubyClass(name="Time")
     public static class YAMLTimeMethods {
-        @JRubyMethod(name = "to_yaml_node", required = 1)
+        @JRubyMethod(name = "to_jvyaml_node", required = 1)
         public static IRubyObject time_to_yaml_node(IRubyObject self, IRubyObject arg) {
             ThreadContext context = self.getRuntime().getCurrentContext();
             IRubyObject tz = self.getRuntime().newString("Z");
@@ -629,27 +629,27 @@ public class RubyYAML {
                 standard = standard.callMethod(context, "+", self.getRuntime().newString(".%06d").callMethod(context,"%", self.getRuntime().newArray(self.callMethod(context, "usec"))));
             }
             standard = standard.callMethod(context, "+", self.getRuntime().newString(" %s").callMethod(context,"%", self.getRuntime().newArray(tz)));
-            return RuntimeHelpers.invoke(context, arg, "scalar", self.callMethod(context, "taguri"), standard, self.callMethod(context, "to_yaml_style"));
+            return RuntimeHelpers.invoke(context, arg, "scalar", self.callMethod(context, "jv_taguri"), standard, self.callMethod(context, "to_jvyaml_style"));
         }
     }
 
     @JRubyClass(name="Date")
     public static class YAMLDateMethods {
-        @JRubyMethod(name = "to_yaml_node", required = 1)
+        @JRubyMethod(name = "to_jvyaml_node", required = 1)
         public static IRubyObject date_to_yaml_node(IRubyObject self, IRubyObject arg) {
             ThreadContext context = self.getRuntime().getCurrentContext();
-            return RuntimeHelpers.invoke(context, arg, "scalar", self.callMethod(context, "taguri"), self.callMethod(context, "to_s"), self.callMethod(context, "to_yaml_style"));
+            return RuntimeHelpers.invoke(context, arg, "scalar", self.callMethod(context, "jv_taguri"), self.callMethod(context, "to_s"), self.callMethod(context, "to_jvyaml_style"));
         }
     }
 
     @JRubyClass(name="TrueClass")
     public static class YAMLTrueMethods {
-        @JRubyMethod(name = "to_yaml_node", required = 1)
+        @JRubyMethod(name = "to_jvyaml_node", required = 1)
         public static IRubyObject true_to_yaml_node(IRubyObject self, IRubyObject arg) {
             ThreadContext context = self.getRuntime().getCurrentContext();
-            return RuntimeHelpers.invoke(context, arg, "scalar", self.callMethod(context, "taguri"), self.callMethod(context, "to_s"), self.callMethod(context, "to_yaml_style"));
+            return RuntimeHelpers.invoke(context, arg, "scalar", self.callMethod(context, "jv_taguri"), self.callMethod(context, "to_s"), self.callMethod(context, "to_jvyaml_style"));
         }
-        @JRubyMethod(name = "taguri")
+        @JRubyMethod(name = "jv_taguri")
         public static IRubyObject true_taguri(IRubyObject self) {
             return self.getRuntime().newString("tag:yaml.org,2002:bool");
         }
@@ -657,12 +657,12 @@ public class RubyYAML {
 
     @JRubyClass(name="FalseClass")
     public static class YAMLFalseMethods {
-        @JRubyMethod(name = "to_yaml_node", required = 1)
+        @JRubyMethod(name = "to_jvyaml_node", required = 1)
         public static IRubyObject false_to_yaml_node(IRubyObject self, IRubyObject arg) {
             ThreadContext context = self.getRuntime().getCurrentContext();
-            return RuntimeHelpers.invoke(context, arg, "scalar", self.callMethod(context, "taguri"), self.callMethod(context, "to_s"), self.callMethod(context, "to_yaml_style"));
+            return RuntimeHelpers.invoke(context, arg, "scalar", self.callMethod(context, "jv_taguri"), self.callMethod(context, "to_s"), self.callMethod(context, "to_jvyaml_style"));
         }
-        @JRubyMethod(name = "taguri")
+        @JRubyMethod(name = "jv_taguri")
         public static IRubyObject false_taguri(IRubyObject self) {
             return self.getRuntime().newString("tag:yaml.org,2002:bool");
         }
@@ -670,10 +670,10 @@ public class RubyYAML {
 
     @JRubyClass(name="NilClass")
     public static class YAMLNilMethods {
-        @JRubyMethod(name = "to_yaml_node", required = 1)
+        @JRubyMethod(name = "to_jvyaml_node", required = 1)
         public static IRubyObject nil_to_yaml_node(IRubyObject self, IRubyObject arg) {
             ThreadContext context = self.getRuntime().getCurrentContext();
-            return RuntimeHelpers.invoke(context, arg,"scalar", self.callMethod(context, "taguri"), self.getRuntime().newString(""), self.callMethod(context, "to_yaml_style"));
+            return RuntimeHelpers.invoke(context, arg,"scalar", self.callMethod(context, "jv_taguri"), self.getRuntime().newString(""), self.callMethod(context, "to_jvyaml_style"));
         }
     }
 }// RubyYAML

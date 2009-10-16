@@ -1,10 +1,10 @@
 require 'java' #needed for the module JavaUtilities, which JavaEmbedUtils have a dependency on
 require 'date'
-require 'yaml_internal'
+require 'jvyaml_internal'
 
 class Java::OrgJrubyYaml::JRubyRepresenter
   def kind_of?(other)
-    if other == YAML::Emitter
+    if other == JvYAML::Emitter
       return true
     else
       super
@@ -12,7 +12,7 @@ class Java::OrgJrubyYaml::JRubyRepresenter
   end
 end
 
-module YAML
+module JvYAML
   #
   # Default settings
   #
@@ -26,29 +26,28 @@ module YAML
   class Error < StandardError; end
 
   def self.parse(obj)
-#    Proxy.new(YAML::load(obj))
-        YAML::JvYAML::Node::from_internal(YAML::_parse_internal(obj)) || false
+    JvYAML::JvYAML::Node::from_internal(JvYAML::_parse_internal(obj)) || false
   end
 
-  def YAML.parse_file( filepath )
+  def JvYAML.parse_file( filepath )
     File.open( filepath ) do |f|
       parse( f )
     end
   end
 
   def self.add_domain_type(*args)
-      warn "YAML::add_domain_type isn't supported on JRuby"
+      warn "JvYAML::add_domain_type isn't supported in JvYAML"
   end
 
   def self.parse_documents(*args)
-      warn "YAML::parse_documents isn't supported on JRuby"
+      warn "JvYAML::parse_documents isn't supported in JvYAML"
   end
-  
+
   class Proxy
     def initialize(v)
       @value = v
     end
-    
+
     def transform
       @value
     end
@@ -56,13 +55,13 @@ module YAML
 
   class YPath
     def self.each_path(*args)
-      warn "YAML::YPath.each_path isn't supported on JRuby"
+      warn "JvYAML::YPath.each_path isn't supported in JvYAML"
     end
   end
 
   class Emitter
     def initialize
-      @out = YAML::JvYAML::Out.new self
+      @out = JvYAML::JvYAML::Out.new self
     end
 
     def reset(opts)
@@ -73,7 +72,7 @@ module YAML
     def emit(oid, &proc)
       proc.call(@out)
     end
-    
+
     def has_key?(key)
     end
   end
@@ -84,9 +83,9 @@ module YAML
       @class, @ivars = cl, iv
     end
 
-    def to_yaml( opts = {} )
-      YAML::quick_emit( object_id, opts ) do |out|
-        out.map( "tag:ruby.yaml.org,2002:object:#{ @class }", to_yaml_style ) do |map|
+    def to_jvyaml( opts = {} )
+      JvYAML::quick_emit( object_id, opts ) do |out|
+        out.map( "tag:ruby.yaml.org,2002:object:#{ @class }", to_jvyaml_style ) do |map|
           @ivars.each do |k,v|
             map.add( k, v )
           end
@@ -94,30 +93,30 @@ module YAML
       end
     end
   end
-  
-  def YAML.emitter; Emitter.new; end
+
+  def JvYAML.emitter; Emitter.new; end
 
   #
   # Allocate an Emitter if needed
   #
-  def YAML.quick_emit( oid, opts = {}, &e )
-    out = 
-      if opts.is_a? YAML::Emitter
+  def JvYAML.quick_emit( oid, opts = {}, &e )
+    out =
+      if opts.is_a? JvYAML::Emitter
         opts
       else
         emitter.reset( opts )
       end
     out.emit( oid, &e )
   end
-  
+
   module JvYAML
     class Out
       attr_accessor :emitter
-      
+
       def initialize(emitter)
         @emitter = emitter
       end
-      
+
       def map(type_id, style = nil)
         map = Map.new(type_id, {}, style)
         yield map
@@ -134,25 +133,25 @@ module YAML
         Scalar.new(type_id, str, style)
       end
     end
-    
+
     class Node
       attr_accessor :value
       attr_accessor :style
       attr_accessor :type_id
 
       def transform
-        org.jruby.yaml.JRubyConstructor.new(self, nil).construct_document(to_internal)
+        org.jruby.ext.jvyaml.JRubyConstructor.new(self, nil).construct_document(to_internal)
       end
-      
+
       def to_str
-        YAML.dump(self)
+        JvYAML.dump(self)
       end
 
       def to_s
-        YAML.dump(self)
+        JvYAML.dump(self)
       end
-      
-      def self.from_internal(internal) 
+
+      def self.from_internal(internal)
         case internal
         when org.jvyamlb.nodes.ScalarNode
           Scalar.new(internal.tag, internal.value, internal.style.chr)
@@ -171,12 +170,12 @@ module YAML
         self.value = val
         self.style = style
       end
-      
+
       def to_internal
         org.jvyamlb.nodes.ScalarNode.new(self.type_id, org.jruby.util.ByteList.new(self.value.to_java_bytes, false), self.style[0])
       end
-      
-      def to_yaml_node(repr)
+
+      def to_jvyaml_node(repr)
         repr.scalar(self.type_id,self.value,self.style)
       end
     end
@@ -191,12 +190,12 @@ module YAML
       def add(v)
         @value << v
       end
-      
+
       def to_internal
         org.jvyamlb.nodes.SequenceNode.new(self.type_id, self.value.map {|v| v.to_internal }, self.style)
       end
-      
-      def to_yaml_node(repr)
+
+      def to_jvyaml_node(repr)
         repr.seq(self.type_id,self.value,self.style)
       end
     end
@@ -215,15 +214,15 @@ module YAML
       def to_internal
         org.jvyamlb.nodes.MappingNode.new(self.type_id, self.value.inject({}) {|h, v| h[v[0].to_internal] = v[1].to_internal ;h }, self.style)
       end
-      
-      def to_yaml_node(repr)
+
+      def to_jvyaml_node(repr)
         repr.map(self.type_id,self.value,self.style)
       end
     end
   end
-  
+
   #
-  # YAML::Stream -- for emitting many documents
+  # JvYAML::Stream -- for emitting many documents
   #
   class Stream
     include Enumerable
@@ -232,11 +231,11 @@ module YAML
       @options = opts
       @documents = []
     end
-    
+
     def [](i)
       @documents[ i ]
     end
-    
+
     def add(doc)
       @documents << doc
     end
@@ -248,9 +247,9 @@ module YAML
     def each(&block)
       @documents.each(&block)
     end
-    
+
     def emit
-      YAML::dump_all(@documents)
+      JvYAML::dump_all(@documents)
     end
   end
 
@@ -264,8 +263,8 @@ module YAML
         def initialize( type, val )
             @type_id = type; @value = val
         end
-        def to_yaml_node(repr)
-          @value.to_yaml_node(repr)
+        def to_jvyaml_node(repr)
+          @value.to_jvyaml_node(repr)
         end
     ensure
         $VERBOSE = verbose
@@ -274,7 +273,7 @@ module YAML
     #
     # Convert a type_id to a taguri
     #
-    def YAML.tagurize( val )
+    def JvYAML.tagurize( val )
       if /^tag:.*?:.*$/ =~ val.to_s
         val
       elsif /^(.*?)\/(.*)$/ =~ val.to_s
@@ -285,23 +284,23 @@ module YAML
         "tag:yaml.org,2002:#{val}"
       end
     end
-      
+
 # From yaml/tag.rb
     # A dictionary of taguris which map to
     # Ruby classes.
     @@tagged_classes = {}
-    
-    # 
+
+    #
     # Associates a taguri _tag_ with a Ruby class _cls_.  The taguri is used to give types
-    # to classes when loading YAML.  Taguris are of the form:
+    # to classes when loading JvYAML.  Taguris are of the form:
     #
     #   tag:authorityName,date:specific
     #
     # The +authorityName+ is a domain name or email address.  The +date+ is the date the type
     # was issued in YYYY or YYYY-MM or YYYY-MM-DD format.  The +specific+ is a name for
     # the type being added.
-    # 
-    # For example, built-in YAML types have 'yaml.org' as the +authorityName+ and '2002' as the
+    #
+    # For example, built-in JvYAML types have 'yaml.org' as the +authorityName+ and '2002' as the
     # +date+.  The +specific+ is simply the name of the type:
     #
     #  tag:yaml.org,2002:int
@@ -313,7 +312,7 @@ module YAML
     #
     #  tag:why@ruby-lang.org,2004:notes/personal
     #
-    def YAML.tag_class( tag, cls )
+    def JvYAML.tag_class( tag, cls )
         if @@tagged_classes.has_key? tag
             warn "class #{ @@tagged_classes[tag] } held ownership of the #{ tag } tag"
         end
@@ -324,9 +323,9 @@ module YAML
     # the dictionary is the full taguri.  The value for each key is the class constant
     # associated to that taguri.
     #
-    #  YAML.tagged_classes["tag:yaml.org,2002:int"] => Integer
+    #  JvYAML.tagged_classes["tag:yaml.org,2002:int"] => Integer
     #
-    def YAML.tagged_classes
+    def JvYAML.tagged_classes
         @@tagged_classes
     end
 end
@@ -336,82 +335,82 @@ class Module
     # :stopdoc:
 
     # Adds a taguri _tag_ to a class, used when dumping or loading the class
-    # in YAML.  See YAML::tag_class for detailed information on typing and
+    # in JvYAML.  See JvYAML::tag_class for detailed information on typing and
     # taguris.
-    def yaml_as( tag, sc = true )
+    def jvyaml_as( tag, sc = true )
         verbose, $VERBOSE = $VERBOSE, nil
         class_eval <<-"end;", __FILE__, __LINE__+1
-            attr_writer :taguri
-            def taguri
-                if respond_to? :to_yaml_type
-                    YAML::tagurize( to_yaml_type[1..-1] )
+            attr_writer :jv_taguri
+            def jv_taguri
+                if respond_to? :to_jvyaml_type
+                    JvYAML::tagurize( to_jvyaml_type[1..-1] )
                 else
-                    return @taguri if defined?(@taguri) and @taguri
+                    return @jv_taguri if defined?(@jv_taguri) and @jv_taguri
                     tag = #{ tag.dump }
-                    if self.class.yaml_tag_subclasses? and self.class != YAML::tagged_classes[tag]
-                        tag = "\#{ tag }:\#{ self.class.yaml_tag_class_name }"
+                    if self.class.jvyaml_tag_subclasses? and self.class != JvYAML::tagged_classes[tag]
+                        tag = "\#{ tag }:\#{ self.class.jvyaml_tag_class_name }"
                     end
                     tag
                 end
             end
-            def self.yaml_tag_subclasses?; #{ sc ? 'true' : 'false' }; end
+            def self.jvyaml_tag_subclasses?; #{ sc ? 'true' : 'false' }; end
         end;
-        YAML::tag_class tag, self
+        JvYAML::tag_class tag, self
     ensure
         $VERBOSE = verbose
     end
     # Transforms the subclass name into a name suitable for display
     # in a subclassed tag.
-    def yaml_tag_class_name
+    def jvyaml_tag_class_name
         self.name
     end
     # Transforms the subclass name found in the tag into a Ruby
     # constant name.
-    def yaml_tag_read_class( name )
+    def jvyaml_tag_read_class( name )
         name
     end
 end
 
-  Hash::yaml_as "tag:ruby.yaml.org,2002:hash"
-  Hash::yaml_as "tag:yaml.org,2002:map"
+  Hash::jvyaml_as "tag:ruby.yaml.org,2002:hash"
+  Hash::jvyaml_as "tag:yaml.org,2002:map"
 
-  Array::yaml_as "tag:ruby.yaml.org,2002:array"
-  Array::yaml_as "tag:yaml.org,2002:seq"
+  Array::jvyaml_as "tag:ruby.yaml.org,2002:array"
+  Array::jvyaml_as "tag:yaml.org,2002:seq"
 
-  String::yaml_as "tag:ruby.yaml.org,2002:string"
-  String::yaml_as "tag:yaml.org,2002:binary"
-  String::yaml_as "tag:yaml.org,2002:str"
+  String::jvyaml_as "tag:ruby.yaml.org,2002:string"
+  String::jvyaml_as "tag:yaml.org,2002:binary"
+  String::jvyaml_as "tag:yaml.org,2002:str"
 
-  Range::yaml_as "tag:ruby.yaml.org,2002:range"
-  
-  Regexp::yaml_as "tag:ruby.yaml.org,2002:regexp"
+  Range::jvyaml_as "tag:ruby.yaml.org,2002:range"
 
-  Integer::yaml_as "tag:yaml.org,2002:int", false
+  Regexp::jvyaml_as "tag:ruby.yaml.org,2002:regexp"
 
-  Time::yaml_as "tag:ruby.yaml.org,2002:time"
-  Time::yaml_as "tag:yaml.org,2002:timestamp"
+  Integer::jvyaml_as "tag:yaml.org,2002:int", false
 
-  Date::yaml_as "tag:yaml.org,2002:timestamp#ymd"
+  Time::jvyaml_as "tag:ruby.yaml.org,2002:time"
+  Time::jvyaml_as "tag:yaml.org,2002:timestamp"
 
-  Float::yaml_as "tag:yaml.org,2002:float"
+  Date::jvyaml_as "tag:yaml.org,2002:timestamp#ymd"
 
-  NilClass::yaml_as "tag:yaml.org,2002:null"
+  Float::jvyaml_as "tag:yaml.org,2002:float"
 
-  YAML::tag_class "tag:yaml.org,2002:bool#yes", TrueClass
-  YAML::tag_class "tag:yaml.org,2002:bool#no", FalseClass
-  YAML::tag_class "tag:ruby.yaml.org,2002:object", Object
-  YAML::tag_class "tag:ruby.yaml.org,2002:exception", Exception
-  YAML::tag_class "tag:ruby.yaml.org,2002:struct", Struct
-  YAML::tag_class "tag:ruby.yaml.org,2002:symbol", Symbol
-  YAML::tag_class "tag:ruby.yaml.org,2002:sym", Symbol
+  NilClass::jvyaml_as "tag:yaml.org,2002:null"
+
+  JvYAML::tag_class "tag:yaml.org,2002:bool#yes", TrueClass
+  JvYAML::tag_class "tag:yaml.org,2002:bool#no", FalseClass
+  JvYAML::tag_class "tag:ruby.yaml.org,2002:object", Object
+  JvYAML::tag_class "tag:ruby.yaml.org,2002:exception", Exception
+  JvYAML::tag_class "tag:ruby.yaml.org,2002:struct", Struct
+  JvYAML::tag_class "tag:ruby.yaml.org,2002:symbol", Symbol
+  JvYAML::tag_class "tag:ruby.yaml.org,2002:sym", Symbol
 
 # From yaml/types.rb
-module YAML
+module JvYAML
     #
     # Builtin collection: !omap
     #
     class Omap < ::Array
-        yaml_as "tag:yaml.org,2002:omap"
+        jvyaml_as "tag:yaml.org,2002:omap"
         def self.[]( *vals )
             o = Omap.new
             0.step( vals.length - 1, 2 ) do |i|
@@ -427,32 +426,32 @@ module YAML
             if ( tmp = self.assoc( k ) ) and not set
                 tmp[1] = val
             else
-                self << [ k, val ] 
+                self << [ k, val ]
             end
             val
         end
         def has_key?( k )
             self.assoc( k ) ? true : false
         end
-        def is_complex_yaml?
+        def is_complex_jvyaml?
             true
         end
-        def to_yaml_node(repr)
+        def to_jvyaml_node(repr)
           sequ = []
           self.each do |v|
             sequ << Hash[ *v ]
           end
-          
-          repr.seq(taguri,sequ,to_yaml_style)
+
+          repr.seq(jv_taguri,sequ,to_jvyaml_style)
         end
     end
 
-    
+
         #
     # Builtin collection: !pairs
     #
     class Pairs < ::Array
-        yaml_as "tag:yaml.org,2002:pairs"
+        jvyaml_as "tag:yaml.org,2002:pairs"
         def self.[]( *vals )
             p = Pairs.new
             0.step( vals.length - 1, 2 ) { |i|
@@ -464,21 +463,21 @@ module YAML
             self.assoc( k ).to_a
         end
         def []=( k, val )
-            self << [ k, val ] 
+            self << [ k, val ]
             val
         end
         def has_key?( k )
             self.assoc( k ) ? true : false
         end
-        def is_complex_yaml?
+        def is_complex_jvyaml?
             true
         end
-        def to_yaml_node(repr)
+        def to_jvyaml_node(repr)
           sequ = []
           self.each do |v|
             sequ << Hash[ *v ]
           end
-          repr.seq(taguri,sequ,to_yaml_style)
+          repr.seq(jv_taguri,sequ,to_jvyaml_style)
         end
     end
 
@@ -486,8 +485,8 @@ module YAML
     # Builtin collection: !set
     #
     class Set < ::Hash
-        yaml_as "tag:yaml.org,2002:set"
+        jvyaml_as "tag:yaml.org,2002:set"
     end
 end
-  
-require 'yaml/syck'
+
+require 'jvyaml/syck'
