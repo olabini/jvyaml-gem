@@ -1,12 +1,12 @@
 #
-# YAML::Store
+# JvYAML::Store
 #
-require 'yaml'
+require 'jvyaml'
 require 'pstore'
 
-class YAML::Store < PStore
+class JvYAML::Store < PStore
   def initialize( *o )
-    @opt = YAML::DEFAULTS.dup
+    @opt = JvYAML::DEFAULTS.dup
     if String === o.first
       super(o.shift)
     end
@@ -16,14 +16,14 @@ class YAML::Store < PStore
   end
 
   def dump(table)
-    @table.to_yaml(@opt)
+    @table.to_jvyaml(@opt)
   end
 
   def load(content)
-    YAML::load(content)
+    JvYAML::load(content)
   end
 
   def load_file(file)
-    YAML::load(file)
+    JvYAML::load(file)
   end
 end
