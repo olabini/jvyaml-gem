@@ -10,6 +10,16 @@ import java.util.List;
 import java.util.Map;
 
 import java.util.regex.Pattern;
+
+
+import org.jruby.Ruby;
+import org.jruby.RubyArray;
+import org.jruby.RubyFixnum;
+import org.jruby.RubyHash;
+import org.jruby.RubyString;
+import org.jruby.RubyClass;
+import org.jruby.RubyModule;
+
 import org.jruby.anno.JRubyMethod;
 import org.jruby.anno.JRubyClass;
 import org.jruby.anno.JRubyModule;
@@ -114,7 +124,7 @@ public class RubyYAML {
 
         nilClass.defineAnnotatedMethods(YAMLNilMethods.class);
 
-        runtime.setObjectToYamlMethod(runtime.getObject().searchMethod("to_yaml"));
+        result.dataWrapStruct(runtime.getObject().searchMethod("to_yaml"));
 
         return result;
     }

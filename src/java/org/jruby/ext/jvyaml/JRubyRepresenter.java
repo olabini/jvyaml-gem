@@ -16,7 +16,6 @@ import org.jruby.RubyModule;
 import org.jruby.RubyHash;
 import org.jruby.RubyArray;
 import org.jruby.RubyString;
-import org.jruby.RubyYAML;
 import org.jruby.runtime.builtin.IRubyObject;
 
 import org.jruby.javasupport.JavaEmbedUtils;
@@ -121,10 +120,12 @@ public class JRubyRepresenter extends SafeRepresenterImpl {
     public static class IRubyObjectYAMLNodeCreator implements YAMLNodeCreator {
         private final IRubyObject data;
         private final RubyClass outClass;
+        private final RubyModule YAMLModule;
 
         public IRubyObjectYAMLNodeCreator(final Object data) {
             this.data = (IRubyObject)data;
-            this.outClass = ((RubyClass)(((RubyModule)this.data.getRuntime().getModule("YAML").getConstant("JvYAML"))).getConstant("Node"));
+            this.YAMLModule = (RubyModule)this.data.getRuntime().getModule("YAML");
+            this.outClass = ((RubyClass)((RubyModule)(YAMLModule.getConstant("JvYAML"))).getConstant("Node"));
         }
 
         public String taguri() {
@@ -135,7 +136,7 @@ public class JRubyRepresenter extends SafeRepresenterImpl {
             Ruby runtime = data.getRuntime();
             ThreadContext context = runtime.getCurrentContext();
 
-            if(data.getMetaClass().searchMethod("to_yaml") == runtime.getObjectToYamlMethod() ||
+            if(data.getMetaClass().searchMethod("to_yaml") == YAMLModule.dataGetStruct() ||
                data.getMetaClass().searchMethod("to_yaml").isUndefined() // In this case, hope that it works out correctly when calling to_yaml_node. Rails does this.
                ) {
                 // to_yaml have not been overridden
