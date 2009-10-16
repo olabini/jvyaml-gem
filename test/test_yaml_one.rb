@@ -1,48 +1,47 @@
 
 require 'test/unit'
-require 'yaml'
-#require 'jvyaml'
+require 'jvyaml'
 
 class JvYAMLUnitTests < Test::Unit::TestCase
   def test_basic_strings
-    assert_equal("str", YAML.load("!str str"))
-    assert_equal("str", YAML.load("--- str"))
-    assert_equal("str", YAML.load("---\nstr"))
-    assert_equal("str", YAML.load("--- \nstr"))
-    assert_equal("str", YAML.load("--- \n str"))
-    assert_equal("str", YAML.load("str"))
-    assert_equal("str", YAML.load(" str"))
-    assert_equal("str", YAML.load("\nstr"))
-    assert_equal("str", YAML.load("\n str"))
-    assert_equal("str", YAML.load('"str"'))
-    assert_equal("str", YAML.load("'str'"))
-    assert_equal("str", YAML.load(" --- 'str'"))
-    assert_equal("1.0", YAML.load("!str 1.0"))
+    assert_equal("str", JvYAML.load("!str str"))
+    assert_equal("str", JvYAML.load("--- str"))
+    assert_equal("str", JvYAML.load("---\nstr"))
+    assert_equal("str", JvYAML.load("--- \nstr"))
+    assert_equal("str", JvYAML.load("--- \n str"))
+    assert_equal("str", JvYAML.load("str"))
+    assert_equal("str", JvYAML.load(" str"))
+    assert_equal("str", JvYAML.load("\nstr"))
+    assert_equal("str", JvYAML.load("\n str"))
+    assert_equal("str", JvYAML.load('"str"'))
+    assert_equal("str", JvYAML.load("'str'"))
+    assert_equal("str", JvYAML.load(" --- 'str'"))
+    assert_equal("1.0", JvYAML.load("!str 1.0"))
   end
 
 
   def test_other_basic_types
-    assert_equal(:str, YAML.load(":str"))
+    assert_equal(:str, JvYAML.load(":str"))
 
-    assert_equal(47, YAML.load("47"))
-    assert_equal(0, YAML.load("0"))
-    assert_equal(-1, YAML.load("-1"))
+    assert_equal(47, JvYAML.load("47"))
+    assert_equal(0, JvYAML.load("0"))
+    assert_equal(-1, JvYAML.load("-1"))
 
-    assert_equal({'a' => 'b', 'c' => 'd' }, YAML.load("a: b\nc: d"))
-    assert_equal({'a' => 'b', 'c' => 'd' }, YAML.load("c: d\na: b\n"))
+    assert_equal({'a' => 'b', 'c' => 'd' }, JvYAML.load("a: b\nc: d"))
+    assert_equal({'a' => 'b', 'c' => 'd' }, JvYAML.load("c: d\na: b\n"))
 
-    assert_equal({'a' => 'b', 'c' => 'd' }, YAML.load("{a: b, c: d}"))
-    assert_equal({'a' => 'b', 'c' => 'd' }, YAML.load("{c: d,\na: b}"))
+    assert_equal({'a' => 'b', 'c' => 'd' }, JvYAML.load("{a: b, c: d}"))
+    assert_equal({'a' => 'b', 'c' => 'd' }, JvYAML.load("{c: d,\na: b}"))
 
-    assert_equal(%w(a b c), YAML.load("--- \n- a\n- b\n- c\n"))
-    assert_equal(%w(a b c), YAML.load("--- [a, b, c]"))
-    assert_equal(%w(a b c), YAML.load("[a, b, c]"))
+    assert_equal(%w(a b c), JvYAML.load("--- \n- a\n- b\n- c\n"))
+    assert_equal(%w(a b c), JvYAML.load("--- [a, b, c]"))
+    assert_equal(%w(a b c), JvYAML.load("[a, b, c]"))
 
-    assert_equal("--- str\n", "str".to_yaml)
-    assert_equal("--- \na: b\n", {'a'=>'b'}.to_yaml)
-    assert_equal("--- \n- a\n- b\n- c\n", %w(a b c).to_yaml)
+    assert_equal("--- str\n", "str".to_jvyaml)
+    assert_equal("--- \na: b\n", {'a'=>'b'}.to_jvyaml)
+    assert_equal("--- \n- a\n- b\n- c\n", %w(a b c).to_jvyaml)
 
-    assert_equal("--- \"1.0\"\n", "1.0".to_yaml)
+    assert_equal("--- \"1.0\"\n", "1.0".to_jvyaml)
   end
 
   class TestBean
@@ -60,69 +59,69 @@ class JvYAMLUnitTests < Test::Unit::TestCase
   TestStruct = Struct.new(:foo,:bar)
   def test_custom_serialization
     assert(["--- !ruby/object:JvYAMLUnitTests::TestBean \nvalue: 13\nkey: 42\n",
-            "--- !ruby/object:JvYAMLUnitTests::TestBean \nkey: 42\nvalue: 13\n"].include?(TestBean.new(13,42).to_yaml))
-    assert_equal(TestBean.new(13,42),YAML.load("--- !ruby/object:JvYAMLUnitTests::TestBean \nvalue: 13\nkey: 42\n"))
+            "--- !ruby/object:JvYAMLUnitTests::TestBean \nkey: 42\nvalue: 13\n"].include?(TestBean.new(13,42).to_jvyaml))
+    assert_equal(TestBean.new(13,42),JvYAML.load("--- !ruby/object:JvYAMLUnitTests::TestBean \nvalue: 13\nkey: 42\n"))
 
-    assert(["--- !ruby/struct:JvYAMLUnitTests::TestStruct \nfoo: 13\nbar: 42\n","--- !ruby/struct:JvYAMLUnitTests::TestStruct \nbar: 42\nfoo: 13\n"].include?(TestStruct.new(13,42).to_yaml))
-    assert_equal("--- !ruby/exception:StandardError \nmessage: foobar\n", StandardError.new("foobar").to_yaml)
+    assert(["--- !ruby/struct:JvYAMLUnitTests::TestStruct \nfoo: 13\nbar: 42\n","--- !ruby/struct:JvYAMLUnitTests::TestStruct \nbar: 42\nfoo: 13\n"].include?(TestStruct.new(13,42).to_jvyaml))
+    assert_equal("--- !ruby/exception:StandardError \nmessage: foobar\n", StandardError.new("foobar").to_jvyaml)
   end
 
   def test_symbols
-    assert_equal("--- :foo\n", :foo.to_yaml)
+    assert_equal("--- :foo\n", :foo.to_jvyaml)
   end
 
   def test_range
-    assert_equal(["--- !ruby/range ", "begin: 1", "end: 3", "excl: false"], (1..3).to_yaml.split("\n").sort)
-    assert_equal(["--- !ruby/range ", "begin: 1", "end: 3", "excl: true"], (1...3).to_yaml.split("\n").sort)
+    assert_equal(["--- !ruby/range ", "begin: 1", "end: 3", "excl: false"], (1..3).to_jvyaml.split("\n").sort)
+    assert_equal(["--- !ruby/range ", "begin: 1", "end: 3", "excl: true"], (1...3).to_jvyaml.split("\n").sort)
   end
 
   def test_regexps
-    assert_equal("--- !ruby/regexp /^abc/\n", /^abc/.to_yaml)
+    assert_equal("--- !ruby/regexp /^abc/\n", /^abc/.to_jvyaml)
   end
 
   def test_times_and_dates
-    assert_equal("--- 1982-05-03 15:32:44 Z\n",Time.utc(1982,05,03,15,32,44).to_yaml)
-    assert_equal("--- 2005-05-03\n",Date.new(2005,5,3).to_yaml)
+    assert_equal("--- 1982-05-03 15:32:44 Z\n",Time.utc(1982,05,03,15,32,44).to_jvyaml)
+    assert_equal("--- 2005-05-03\n",Date.new(2005,5,3).to_jvyaml)
   end
 
   def test_weird_numbers
-    assert_equal("--- .NaN\n",(0.0/0.0).to_yaml)
-    assert_equal("--- .Inf\n",(1.0/0.0).to_yaml)
-    assert_equal("--- -.Inf\n",(-1.0/0.0).to_yaml)
-    assert_equal("--- 0.0\n", (0.0).to_yaml)
-    assert_equal("--- 0\n", 0.to_yaml)
+    assert_equal("--- .NaN\n",(0.0/0.0).to_jvyaml)
+    assert_equal("--- .Inf\n",(1.0/0.0).to_jvyaml)
+    assert_equal("--- -.Inf\n",(-1.0/0.0).to_jvyaml)
+    assert_equal("--- 0.0\n", (0.0).to_jvyaml)
+    assert_equal("--- 0\n", 0.to_jvyaml)
   end
 
   def test_boolean
-    assert_equal("--- true\n", true.to_yaml)
-    assert_equal("--- false\n", false.to_yaml)
+    assert_equal("--- true\n", true.to_jvyaml)
+    assert_equal("--- false\n", false.to_jvyaml)
   end
 
   def test_nil
-    assert_equal("--- \n", nil.to_yaml)
+    assert_equal("--- \n", nil.to_jvyaml)
   end
 
   def test_JRUBY_718
-    assert_equal("--- \"\"\n", ''.to_yaml)
-    assert_equal('', YAML.load("---\n!str"))
+    assert_equal("--- \"\"\n", ''.to_jvyaml)
+    assert_equal('', JvYAML.load("---\n!str"))
   end
 
   def test_JRUBY_719
-    assert_equal('---', YAML.load("--- ---\n"))
-    assert_equal('---', YAML.load("---"))
+    assert_equal('---', JvYAML.load("--- ---\n"))
+    assert_equal('---', JvYAML.load("---"))
   end
 
   def test_shared_strings
     astr = "abcde"
     shared = astr[2..-1]
-    assert_equal('cde', YAML.load(shared))
-    assert_equal("--- cde\n", shared.to_yaml)
+    assert_equal('cde', JvYAML.load(shared))
+    assert_equal("--- cde\n", shared.to_jvyaml)
   end
 
   def test_JRUBY_1026
     a = "one0.1"
     b = a[3..-1]
-    assert_equal("--- \"0.1\"\n", YAML.dump(b))
+    assert_equal("--- \"0.1\"\n", JvYAML.dump(b))
   end
 
   class HashWithIndifferentAccess < Hash
@@ -132,14 +131,14 @@ class JvYAMLUnitTests < Test::Unit::TestCase
     hash = HashWithIndifferentAccess.new
     hash['kind'] = 'human'
     need_to_be_serialized = {:first => 'something', :second_params => hash}
-    a = {:x => need_to_be_serialized.to_yaml}
-    assert_equal need_to_be_serialized, YAML.load(YAML.load(a.to_yaml)[:x])
+    a = {:x => need_to_be_serialized.to_jvyaml}
+    assert_equal need_to_be_serialized, JvYAML.load(JvYAML.load(a.to_jvyaml)[:x])
   end
 
   def test_JRUBY_1220
     bad_text = " A\nR"
-    dump = YAML.dump({'text' => bad_text})
-    loaded = YAML.load(dump)
+    dump = JvYAML.dump({'text' => bad_text})
+    loaded = JvYAML.load(dump)
     assert_equal bad_text, loaded['text']
 
     bad_text = %{
@@ -147,8 +146,8 @@ class JvYAMLUnitTests < Test::Unit::TestCase
 RuntimeError: ERROR	C23503	Mupdate or delete on "projects" violates foreign
     }
 
-    dump = YAML.dump({'text' => bad_text})
-    loaded = YAML.load(dump)
+    dump = JvYAML.dump({'text' => bad_text})
+    loaded = JvYAML.load(dump)
     assert_equal bad_text, loaded['text']
 
     string = <<-YAML
@@ -160,12 +159,12 @@ outer
     data: SELECT 'xxxxxxxxxxxxxxxxxxx', COUNT(*) WHERE xyzabc = 'unk'
     combine: overlay-bottom
 YAML
-    assert_equal string, YAML.load(YAML.dump(string))
+    assert_equal string, JvYAML.load(JvYAML.dump(string))
   end
 
   def test_whitespace_variations
     text = " "*80 + "\n" + " "*30
-    assert_equal text, YAML.load(YAML.dump(text))
+    assert_equal text, JvYAML.load(JvYAML.dump(text))
 
     text = <<-YAML
   - label: New
@@ -189,7 +188,7 @@ YAML
                     combine: total
 YAML
 
-    assert_equal text, YAML.load(YAML.dump(text))
+    assert_equal text, JvYAML.load(JvYAML.dump(text))
 
     text = <<-YAML
 stack-bar-chart
@@ -219,7 +218,7 @@ stack-bar-chart
     combine: total
 YAML
 
-    assert_equal text, YAML.load(YAML.dump(text))
+    assert_equal text, JvYAML.load(JvYAML.dump(text))
   end
 
   def test_nested_stuff
@@ -231,12 +230,12 @@ akey: blah
 YAML
 
     assert_raises(ArgumentError) do
-      YAML.load(text)
+      JvYAML.load(text)
     end
   end
 
   def roundtrip(text)
-    assert_equal text, YAML.load(YAML.dump(text))
+    assert_equal text, JvYAML.load(JvYAML.dump(text))
   end
 
   def test_weird_stuff
@@ -249,7 +248,7 @@ YAML
   end
 
   def fuzz_roundtrip(str)
-    out = YAML.load(YAML.dump(str))
+    out = JvYAML.load(JvYAML.dump(str))
     assert_equal str, out
   end
 
@@ -286,7 +285,7 @@ YAML
   def test_JRUBY_1471
     list = [YamlTest.new, YamlTest.new, YamlTest.new]
     assert_equal 3, list.map{ |ll| ll.object_id }.uniq.length
-    list2 = YAML.load(YAML.dump(list))
+    list2 = JvYAML.load(JvYAML.dump(list))
     assert_equal 3, list2.map{ |ll| ll.object_id }.uniq.length
   end
 end
@@ -297,21 +296,21 @@ __END__
 
 
 # JRUBY-1659
-YAML.load("{a: 2007-01-01 01:12:34}")
+JvYAML.load("{a: 2007-01-01 01:12:34}")
 
 # JRUBY-1765
-#assert_equal Date.new(-1,1,1), YAML.load(Date.new(-1,1,1).to_yaml)
+#assert_equal Date.new(-1,1,1), JvYAML.load(Date.new(-1,1,1).to_jvyaml)
 
 # JRUBY-1766
-test_ok YAML.load(Time.now.to_yaml).instance_of?(Time)
-test_ok YAML.load("2007-01-01 01:12:34").instance_of?(String)
-test_ok YAML.load("2007-01-01 01:12:34.0").instance_of?(String)
-test_ok YAML.load("2007-01-01 01:12:34 +00:00").instance_of?(Time)
-test_ok YAML.load("2007-01-01 01:12:34.0 +00:00").instance_of?(Time)
-test_ok YAML.load("{a: 2007-01-01 01:12:34}")["a"].instance_of?(String)
+test_ok JvYAML.load(Time.now.to_jvyaml).instance_of?(Time)
+test_ok JvYAML.load("2007-01-01 01:12:34").instance_of?(String)
+test_ok JvYAML.load("2007-01-01 01:12:34.0").instance_of?(String)
+test_ok JvYAML.load("2007-01-01 01:12:34 +00:00").instance_of?(Time)
+test_ok JvYAML.load("2007-01-01 01:12:34.0 +00:00").instance_of?(Time)
+test_ok JvYAML.load("{a: 2007-01-01 01:12:34}")["a"].instance_of?(String)
 
 # JRUBY-1898
-val = YAML.load(<<YAML)
+val = JvYAML.load(<<YAML)
 ---
 - foo
 - foo
@@ -326,7 +325,7 @@ test_ok val[2].object_id != val[3].object_id
 test_ok val[4].object_id != val[5].object_id
 
 # JRUBY-1911
-val = YAML.load(<<YAML)
+val = JvYAML.load(<<YAML)
 ---
 foo: { bar }
 YAML
@@ -334,8 +333,8 @@ YAML
 assert_equal({"foo" => {"bar" => nil}}, val)
 
 # JRUBY-1756
-# This is almost certainly invalid YAML. but MRI handles it...
-val = YAML.load(<<YAML)
+# This is almost certainly invalid JvYAML. but MRI handles it...
+val = JvYAML.load(<<YAML)
 ---
 default: –
 - a
@@ -344,18 +343,18 @@ YAML
 assert_equal({"default" => ['a']}, val)
 
 # JRUBY-1978, scalars can start with , if it's not ambigous
-assert_equal(",a", YAML.load("--- \n,a"))
+assert_equal(",a", JvYAML.load("--- \n,a"))
 
-# Make sure that overriding to_yaml always throws an exception unless it returns the correct thing
+# Make sure that overriding to_jvyaml always throws an exception unless it returns the correct thing
 
 class TestYamlFoo
-  def to_yaml(*args)
+  def to_jvyaml(*args)
     "foo"
   end
 end
 
 test_exception(TypeError) do
-  { :foo => TestYamlFoo.new }.to_yaml
+  { :foo => TestYamlFoo.new }.to_jvyaml
 end
 
 # JRUBY-2019, handle tagged_classes, yaml_as and so on a bit better
@@ -392,26 +391,26 @@ assert_equal({
 
 # JRUBY-2083
 
-assert_equal({'foobar' => '>= 123'}, YAML.load("foobar: >= 123"))
+assert_equal({'foobar' => '>= 123'}, JvYAML.load("foobar: >= 123"))
 
 # JRUBY-2135
-assert_equal({'foo' => 'bar'}, YAML.load("---\nfoo: \tbar"))
+assert_equal({'foo' => 'bar'}, JvYAML.load("---\nfoo: \tbar"))
 
 # JRUBY-1911
-assert_equal({'foo' => {'bar' => nil, 'qux' => nil}}, YAML.load("---\nfoo: {bar, qux}"))
+assert_equal({'foo' => {'bar' => nil, 'qux' => nil}}, JvYAML.load("---\nfoo: {bar, qux}"))
 
 # JRUBY-2323
 class YAMLTestException < Exception;end
 class YAMLTestString < String; end
-assert_equal('--- !str:YAMLTestString', YAMLTestString.new.to_yaml.strip)
+assert_equal('--- !str:YAMLTestString', YAMLTestString.new.to_jvyaml.strip)
 assert_equal(YAMLTestString.new, YAML::load('--- !str:YAMLTestString'))
 
-assert_equal(<<EXCEPTION_OUT, YAMLTestException.new.to_yaml)
+assert_equal(<<EXCEPTION_OUT, YAMLTestException.new.to_jvyaml)
 --- !ruby/exception:YAMLTestException
 message: YAMLTestException
 EXCEPTION_OUT
 
-assert_equal(YAMLTestException.new.inspect, YAML::load(YAMLTestException.new.to_yaml).inspect)
+assert_equal(YAMLTestException.new.inspect, YAML::load(YAMLTestException.new.to_jvyaml).inspect)
 
 # JRUBY-2409
 assert_equal("*.rb", YAML::load("---\n*.rb"))
@@ -421,20 +420,20 @@ assert_equal("&.rb", YAML::load("---\n&.rb"))
 a_str = "foo"
 a_str.instance_variable_set :@bar, "baz"
 
-test_ok(["--- !str \nstr: foo\n\"@bar\": baz\n", "--- !str \n\"@bar\": baz\nstr: foo\n"].include?(a_str.to_yaml))
-assert_equal "baz", YAML.load(a_str.to_yaml).instance_variable_get(:@bar)
+test_ok(["--- !str \nstr: foo\n\"@bar\": baz\n", "--- !str \n\"@bar\": baz\nstr: foo\n"].include?(a_str.to_jvyaml))
+assert_equal "baz", JvYAML.load(a_str.to_jvyaml).instance_variable_get(:@bar)
 
-assert_equal :"abc\"flo", YAML.load("---\n:\"abc\\\"flo\"")
+assert_equal :"abc\"flo", JvYAML.load("---\n:\"abc\\\"flo\"")
 
 # JRUBY-2579
-assert_equal [:year], YAML.load("---\n[:year]")
+assert_equal [:year], JvYAML.load("---\n[:year]")
 
 assert_equal({
              'date_select' => { 'order' => [:year, :month, :day] },
              'some' => {
                'id' => 1,
                'name' => 'some',
-               'age' => 16}}, YAML.load(<<YAML))
+               'age' => 16}}, JvYAML.load(<<YAML))
 date_select:
   order: [:year, :month, :day]
 some:
@@ -449,14 +448,14 @@ obj = Object.new
 objects1 = [obj, obj]
 test_ok objects1[0].object_id == objects1[1].object_id
 
-objects2 = YAML::load objects1.to_yaml
+objects2 = YAML::load objects1.to_jvyaml
 test_ok objects2[0].object_id == objects2[1].object_id
 
 # JRUBY-2192
 
 class FooYSmith < Array; end
 
-obj = YAML.load(<<YAMLSTR)
+obj = JvYAML.load(<<YAMLSTR)
 --- !ruby/array:FooYSmith
 - val
 - val2
@@ -467,7 +466,7 @@ assert_equal FooYSmith, obj.class
 
 class FooXSmith < Hash; end
 
-obj = YAML.load(<<YAMLSTR)
+obj = JvYAML.load(<<YAMLSTR)
 --- !ruby/hash:FooXSmith
 key: value
 otherkey: othervalue
@@ -480,15 +479,15 @@ class PersonTestOne
   yaml_as 'tag:data.allman.ms,2008:Person'
 end
 
-assert_equal "--- !data.allman.ms,2008/Person {}\n\n", PersonTestOne.new.to_yaml
-assert_equal PersonTestOne, YAML.load(PersonTestOne.new.to_yaml).class
+assert_equal "--- !data.allman.ms,2008/Person {}\n\n", PersonTestOne.new.to_jvyaml
+assert_equal PersonTestOne, JvYAML.load(PersonTestOne.new.to_jvyaml).class
 
 
 
 Hash.class_eval do
-  def to_yaml( opts = {} )
+  def to_jvyaml( opts = {} )
     YAML::quick_emit( self, opts ) do |out|
-      out.map( taguri, to_yaml_style ) do |map|
+      out.map( jv_taguri, to_jvyaml_style ) do |map|
         each do |k, v|
           map.add( k, v )
         end
@@ -507,7 +506,7 @@ orderRequest: !ruby/object:MySoap::InterfaceOne::OrderType
     str: ""
 Y
 
-test_no_exception { YAML.load(jruby3639) }
+test_no_exception { JvYAML.load(jruby3639) }
 
 # JRUBY-3773
 class Badger
@@ -534,9 +533,9 @@ end
 class Badger
   yaml_as "tag:ruby.yaml.org,2002:#{self}"
 
-  def to_yaml (opts={})
+  def to_jvyaml (opts={})
     YAML::quick_emit(self.object_id, opts) do |out|
-      out.map(taguri) do |map|
+      out.map(jv_taguri) do |map|
         map.add("s", to_s)
       end
     end
@@ -588,9 +587,9 @@ struct_obj1 = ControlStruct.new
 struct_obj1.arg1 = 'control_value'
 struct_obj2 = BadStruct.new('struct_value')
 
-assert_equal YAML.load(class_obj1.to_yaml), class_obj1
-assert_equal YAML.load(struct_obj1.to_yaml), struct_obj1
-assert_equal YAML.load(struct_obj2.to_yaml), struct_obj2
+assert_equal JvYAML.load(class_obj1.to_jvyaml), class_obj1
+assert_equal JvYAML.load(struct_obj1.to_jvyaml), struct_obj1
+assert_equal JvYAML.load(struct_obj2.to_jvyaml), struct_obj2
 
 
 # JRUBY-3518
@@ -615,19 +614,19 @@ class SampleArray < Array
   end
 end
 
-s = YAML.load(YAML.dump(Sample.new))
+s = JvYAML.load(JvYAML.dump(Sample.new))
 assert_equal 'yaml initialize', s.key
 
-s = YAML.load(YAML.dump(SampleHash.new))
+s = JvYAML.load(JvYAML.dump(SampleHash.new))
 assert_equal 'yaml initialize', s.key
 
-s = YAML.load(YAML.dump(SampleArray.new))
+s = JvYAML.load(JvYAML.dump(SampleArray.new))
 assert_equal 'yaml initialize', s.key
 
 
 # JRUBY-3327
 
-assert_equal YAML.load("- foo\n  bar: bazz"), [{"foo bar" => "bazz"}]
+assert_equal JvYAML.load("- foo\n  bar: bazz"), [{"foo bar" => "bazz"}]
 
 # JRUBY-3263
 y = <<YAML
@@ -636,9 +635,9 @@ production:
  example.com: ABQIAAAAzMUFFnT9uH0Sfg98Y4kbhGFJQa0g3IQ9GZqIMmInSLrthJKGDmlRT98f4j135zat56yjRKQlWnkmod3TB
 YAML
 
-assert_equal YAML.load(y)['production'], {"ABQIAAAAinq15RDnRyoOaQwM_PoC4RTJQa0g3IQ9GZqIMmInSLzwtGDKaBTPoBdSu0WQaPTIv1sXhVRK0Kolfg example.com" => "ABQIAAAAzMUFFnT9uH0Sfg98Y4kbhGFJQa0g3IQ9GZqIMmInSLrthJKGDmlRT98f4j135zat56yjRKQlWnkmod3TB"}
+assert_equal JvYAML.load(y)['production'], {"ABQIAAAAinq15RDnRyoOaQwM_PoC4RTJQa0g3IQ9GZqIMmInSLzwtGDKaBTPoBdSu0WQaPTIv1sXhVRK0Kolfg example.com" => "ABQIAAAAzMUFFnT9uH0Sfg98Y4kbhGFJQa0g3IQ9GZqIMmInSLrthJKGDmlRT98f4j135zat56yjRKQlWnkmod3TB"}
 
 
 # JRUBY-3412
 y = "--- 2009-02-16 22::40:26.574754 -05:00\n"
-assert_equal YAML.load(y).to_yaml, y
+assert_equal JvYAML.load(y).to_jvyaml, y

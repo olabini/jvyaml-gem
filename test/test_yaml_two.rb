@@ -11,13 +11,13 @@ class YAML_Unit_Tests < Test::Unit::TestCase
 	# Convert between YAML and the object to verify correct parsing and
 	# emitting
 	#
-	def assert_to_yaml( obj, yaml )
-		assert_equal( obj, YAML::load( yaml ) )
-		assert_equal( obj, YAML::parse( yaml ).transform )
-        assert_equal( obj, YAML::load( obj.to_yaml ) )
-		assert_equal( obj, YAML::parse( obj.to_yaml ).transform )
-        assert_equal( obj, YAML::load(
-			obj.to_yaml( :UseVersion => true, :UseHeader => true, :SortKeys => true )
+	def assert_to_jvyaml( obj, yaml )
+		assert_equal( obj, JvYAML::load( yaml ) )
+		assert_equal( obj, JvYAML::parse( yaml ).transform )
+        assert_equal( obj, JvYAML::load( obj.to_jvyaml ) )
+		assert_equal( obj, JvYAML::parse( obj.to_jvyaml ).transform )
+        assert_equal( obj, JvYAML::load(
+			obj.to_jvyaml( :UseVersion => true, :UseHeader => true, :SortKeys => true )
 		) )
 	end
 
@@ -25,16 +25,16 @@ class YAML_Unit_Tests < Test::Unit::TestCase
 	# Test parser only
 	#
 	def assert_parse_only( obj, yaml )
-		assert_equal( obj, YAML::load( yaml ) )
-		assert_equal( obj, YAML::parse( yaml ).transform )
+		assert_equal( obj, JvYAML::load( yaml ) )
+		assert_equal( obj, JvYAML::parse( yaml ).transform )
 	end
 
     def assert_cycle( obj )
-        assert_equal( obj, YAML::load( obj.to_yaml ) )
+        assert_equal( obj, JvYAML::load( obj.to_jvyaml ) )
     end
 
     def assert_path_segments( path, segments )
-        YAML::YPath.each_path( path ) { |choice|
+        JvYAML::YPath.each_path( path ) { |choice|
             assert_equal( choice.segments, segments.shift )
         }
         assert_equal( segments.length, 0, "Some segments leftover: #{ segments.inspect }" )
@@ -106,7 +106,7 @@ EOY
 
 	def test_spec_simple_implicit_sequence
 	  	# Simple implicit sequence
-		assert_to_yaml(
+		assert_to_jvyaml(
 			[ 'Mark McGwire', 'Sammy Sosa', 'Ken Griffey' ], <<EOY
 - Mark McGwire
 - Sammy Sosa
@@ -117,7 +117,7 @@ EOY
 
 	def test_spec_simple_implicit_map
 		# Simple implicit map
-		assert_to_yaml(
+		assert_to_jvyaml(
 			{ 'hr' => 65, 'avg' => 0.278, 'rbi' => 147 }, <<EOY
 avg: 0.278
 hr: 65
@@ -128,7 +128,7 @@ EOY
 
 	def test_spec_simple_map_with_nested_sequences
 		# Simple mapping with nested sequences
-		assert_to_yaml(
+		assert_to_jvyaml(
 			{ 'american' =>
 			  [ 'Boston Red Sox', 'Detroit Tigers', 'New York Yankees' ],
 			  'national' =>
@@ -147,7 +147,7 @@ EOY
 
 	def test_spec_simple_sequence_with_nested_map
 		# Simple sequence with nested map
-		assert_to_yaml(
+		assert_to_jvyaml(
 		  [
 		    {'name' => 'Mark McGwire', 'hr' => 65, 'avg' => 0.278},
 			{'name' => 'Sammy Sosa', 'hr' => 63, 'avg' => 0.288}
@@ -196,7 +196,7 @@ EOY
 
     def test_ambiguous_comments
         # [ruby-talk:88012]
-        assert_to_yaml( "Call the method #dave", <<EOY )
+        assert_to_jvyaml( "Call the method #dave", <<EOY )
 --- "Call the method #dave"
 EOY
     end
@@ -235,7 +235,7 @@ rbi:
 EOY
 	 	)
 
-        assert_to_yaml(
+        assert_to_jvyaml(
             [{"arrival"=>"EDI", "departure"=>"LAX", "fareref"=>"DOGMA", "currency"=>"GBP"}, {"arrival"=>"MEL", "departure"=>"SYD", "fareref"=>"MADF", "currency"=>"AUD"}, {"arrival"=>"MCO", "departure"=>"JFK", "fareref"=>"DFSF", "currency"=>"USD"}], <<EOY
   -
     &F fareref: DOGMA
@@ -247,7 +247,7 @@ EOY
 EOY
         )
 
-        assert_to_yaml(
+        assert_to_jvyaml(
             {"ALIASES"=>["fareref", "currency", "departure", "arrival"], "FARES"=>[{"arrival"=>"EDI", "departure"=>"LAX", "fareref"=>"DOGMA", "currency"=>"GBP"}, {"arrival"=>"MEL", "departure"=>"SYD", "fareref"=>"MADF", "currency"=>"AUD"}, {"arrival"=>"MCO", "departure"=>"JFK", "fareref"=>"DFSF", "currency"=>"USD"}]}, <<EOY
 ---
 ALIASES: [&f fareref, &c currency, &d departure, &a arrival]
@@ -466,7 +466,7 @@ exponential: 12.3015e+02
 fixed: 1,230.15
 negative infinity: -.inf
 EOY
-		nan = YAML::load( <<EOY )
+		nan = JvYAML::load( <<EOY )
 not a number: .NaN
 EOY
 		assert( nan['not a number'].nan? )
@@ -532,7 +532,7 @@ EOY
 
 	def test_spec_log_file
 		doc_ct = 0
-		YAML::load_documents( <<EOY
+		JvYAML::load_documents( <<EOY
 ---
 Time: 2001-11-23 15:01:42 -05:00
 User: ed
@@ -581,7 +581,7 @@ EOY
 	end
 
 	def test_spec_root_fold
-		y = YAML::load( <<EOY
+		y = JvYAML::load( <<EOY
 --- >
 This YAML stream contains a single text value.
 The next stream is a log file - a sequence of
@@ -593,7 +593,7 @@ EOY
 	end
 
 	def test_spec_root_mapping
-		y = YAML::load( <<EOY
+		y = JvYAML::load( <<EOY
 # This stream is an example of a top-level mapping.
 invoice : 34843
 date    : 2001-01-23
@@ -605,7 +605,7 @@ EOY
 
 	def test_spec_oneline_docs
 		doc_ct = 0
-		YAML::load_documents( <<EOY
+		JvYAML::load_documents( <<EOY
 # The following is a sequence of three documents.
 # The first contains an empty mapping, the second
 # an empty sequence, and the last an empty string.
@@ -637,8 +637,8 @@ EOY
                 raise ArgumentError, "Not a Hash in domain.tld,2002/invoice: " + val.inspect
             end
         }
-        YAML.add_domain_type( "domain.tld,2002", 'invoice', &customer_proc )
-        YAML.add_domain_type( "domain.tld,2002", 'customer', &customer_proc )
+        JvYAML.add_domain_type( "domain.tld,2002", 'invoice', &customer_proc )
+        JvYAML.add_domain_type( "domain.tld,2002", 'customer', &customer_proc )
 		assert_parse_only( { "invoice"=> { "customers"=> [ { "given"=>"Chris", "type"=>"domain customer", "family"=>"Dumars" } ], "type"=>"domain invoice" } }, <<EOY
 # 'http://domain.tld,2002/invoice' is some type family.
 invoice: !domain.tld,2002/^invoice
@@ -685,7 +685,7 @@ EOY
 
 	def test_spec_private_types
 		doc_ct = 0
-		YAML::parse_documents( <<EOY
+		JvYAML::parse_documents( <<EOY
 # Private types are per-document.
 ---
 pool: !!ball
@@ -710,10 +710,10 @@ EOY
 	end
 
 	def test_spec_url_escaping
-		YAML.add_domain_type( "domain.tld,2002", "type0" ) { |type, val|
+		JvYAML.add_domain_type( "domain.tld,2002", "type0" ) { |type, val|
 			"ONE: #{val}"
 		}
-		YAML.add_domain_type( "domain.tld,2002", "type%30" ) { |type, val|
+		JvYAML.add_domain_type( "domain.tld,2002", "type%30" ) { |type, val|
 			"TWO: #{val}"
 		}
 		assert_parse_only(
@@ -742,7 +742,7 @@ EOY
 	end
 
 	def test_spec_explicit_families
-        YAML.add_domain_type( "somewhere.com,2002", 'type' ) { |type, val|
+        JvYAML.add_domain_type( "somewhere.com,2002", 'type' ) { |type, val|
             "SOMEWHERE: #{val}"
         }
 		assert_parse_only(
@@ -763,7 +763,7 @@ EOY
 
 	def test_spec_application_family
 		# Testing the clarkevans.com graphs
-		YAML.add_domain_type( "clarkevans.com,2002", 'graph/shape' ) { |type, val|
+		JvYAML.add_domain_type( "clarkevans.com,2002", 'graph/shape' ) { |type, val|
 			if Array === val
 				val << "Shape Container"
 				val
@@ -780,9 +780,9 @@ EOY
 				raise ArgumentError, "Invalid graph of type #{val.class}: " + val.inspect
 			end
 		}
-		YAML.add_domain_type( "clarkevans.com,2002", 'graph/circle', &one_shape_proc )
-		YAML.add_domain_type( "clarkevans.com,2002", 'graph/line', &one_shape_proc )
-		YAML.add_domain_type( "clarkevans.com,2002", 'graph/text', &one_shape_proc )
+		JvYAML.add_domain_type( "clarkevans.com,2002", 'graph/circle', &one_shape_proc )
+		JvYAML.add_domain_type( "clarkevans.com,2002", 'graph/line', &one_shape_proc )
+		JvYAML.add_domain_type( "clarkevans.com,2002", 'graph/text', &one_shape_proc )
 		assert_parse_only(
 			[[{"radius"=>7, "center"=>{"x"=>73, "y"=>129}, "TYPE"=>"Shape: graph/circle"}, {"finish"=>{"x"=>89, "y"=>102}, "TYPE"=>"Shape: graph/line", "start"=>{"x"=>73, "y"=>129}}, {"TYPE"=>"Shape: graph/text", "value"=>"Pretty vector drawing.", "start"=>{"x"=>73, "y"=>129}, "color"=>16772795}, "Shape Container"]], <<EOY
 - !clarkevans.com,2002/graph/^shape
@@ -1037,7 +1037,7 @@ EOY
 	end
 	def test_ruby_regexp
 		# Test Ruby regular expressions
-		assert_to_yaml(
+		assert_to_jvyaml(
 			{ 'simple' => /a.b/, 'complex' => %r'\A"((?:[^"]|\")+)"',
 			  'case-insensitive' => /George McFly/i }, <<EOY
 case-insensitive: !ruby/regexp "/George McFly/i"
@@ -1053,17 +1053,17 @@ EOY
     def test_ranges
 
         # Simple numeric
-        assert_to_yaml( 1..3, <<EOY )
+        assert_to_jvyaml( 1..3, <<EOY )
 --- !ruby/range 1..3
 EOY
 
         # Simple alphabetic
-        assert_to_yaml( 'a'..'z', <<EOY )
+        assert_to_jvyaml( 'a'..'z', <<EOY )
 --- !ruby/range a..z
 EOY
 
         # Float
-        assert_to_yaml( 10.5...30.3, <<EOY )
+        assert_to_jvyaml( 10.5...30.3, <<EOY )
 --- !ruby/range 10.5...30.3
 EOY
 
@@ -1072,7 +1072,7 @@ EOY
 	def test_ruby_struct
 		# Ruby structures
 		book_struct = Struct::new( "BookStruct", :author, :title, :year, :isbn )
-		assert_to_yaml(
+		assert_to_jvyaml(
 			[ book_struct.new( "Yukihiro Matsumoto", "Ruby in a Nutshell", 2002, "0-596-00214-9" ),
 			  book_struct.new( [ 'Dave Thomas', 'Andy Hunt' ], "The Pickaxe", 2002,
 				book_struct.new( "This should be the ISBN", "but I have another struct here", 2002, "None" )
@@ -1096,7 +1096,7 @@ EOY
 EOY
 		)
 
-        assert_to_yaml( YAML_Tests::StructTest.new( 123 ), <<EOY )
+        assert_to_jvyaml( YAML_Tests::StructTest.new( 123 ), <<EOY )
 --- !ruby/struct:YAML_Tests::StructTest
 c: 123
 EOY
@@ -1104,17 +1104,17 @@ EOY
 	end
 
 	def test_emitting_indicators
-		assert_to_yaml( "Hi, from Object 1. You passed: please, pretty please", <<EOY
+		assert_to_jvyaml( "Hi, from Object 1. You passed: please, pretty please", <<EOY
 --- "Hi, from Object 1. You passed: please, pretty please"
 EOY
 		)
 	end
 
 	#
-	# Test the YAML::Stream class -- INACTIVE at the moment
+	# Test the JvYAML::Stream class -- INACTIVE at the moment
 	#
 	def test_document
-		y = YAML::Stream.new( :Indent => 2, :UseVersion => 0 )
+		y = JvYAML::Stream.new( :Indent => 2, :UseVersion => 0 )
 		y.add(
 			{ 'hi' => 'hello', 'map' =>
 				{ 'good' => 'two' },
@@ -1147,7 +1147,7 @@ EOY
     def test_akira
 
         # Commas in plain scalars [ruby-core:1066]
-        assert_to_yaml(
+        assert_to_jvyaml(
             {"A"=>"A,","B"=>"B"}, <<EOY
 A: "A,"
 B: B
@@ -1155,7 +1155,7 @@ EOY
         )
 
         # Double-quoted keys [ruby-core:1069]
-        assert_to_yaml(
+        assert_to_jvyaml(
             {"1"=>2, "2"=>3}, <<EOY
 '1': 2
 "2": 3
@@ -1163,7 +1163,7 @@ EOY
         )
 
         # Anchored mapping [ruby-core:1071]
-        assert_to_yaml(
+        assert_to_jvyaml(
             [{"a"=>"b"}] * 2, <<EOY
 - &id001
   a: b
@@ -1173,7 +1173,7 @@ EOY
 
         # Stress test [ruby-core:1071]
         # a = []; 1000.times { a << {"a"=>"b", "c"=>"d"} }
-        # YAML::load( a.to_yaml )
+        # JvYAML::load( a.to_jvyaml )
 
     end
 
@@ -1219,7 +1219,7 @@ EOY
     def test_circular_references
         a = []; a[0] = a; a[1] = a
         inspect_str = "[[...], [...]]"
-        assert_equal( inspect_str, YAML::load( a.to_yaml ).inspect )
+        assert_equal( inspect_str, JvYAML::load( a.to_jvyaml ).inspect )
     end
 
     #
@@ -1256,14 +1256,14 @@ EOY
       #
       # empty seq as key
       #
-      o = YAML.load({[]=>""}.to_yaml)
+      o = JvYAML.load({[]=>""}.to_jvyaml)
       assert_equal(Hash, o.class)
       assert_equal([[]], o.keys)
 
       #
       # empty map as key
       #
-      o = YAML.load({{}=>""}.to_yaml)
+      o = JvYAML.load({{}=>""}.to_jvyaml)
       assert_equal(Hash, o.class)
       assert_equal([{}], o.keys)
     end
@@ -1272,8 +1272,8 @@ EOY
     # contributed by riley lynch [ruby-Bugs-8548]
     #
     def test_object_id_collision
-      omap = YAML::Omap.new
+      omap = JvYAML::Omap.new
       1000.times { |i| omap["key_#{i}"] = { "value" => i } }
-      raise "id collision in ordered map" if omap.to_yaml =~ /id\d+/
+      raise "id collision in ordered map" if omap.to_jvyaml =~ /id\d+/
     end
 end

@@ -1,13 +1,14 @@
 Manifest.txt
 Rakefile
-lib/yaml/store.rb
-lib/yaml/syck.rb
-lib/yaml.rb
+lib/jvyaml/store.rb
+lib/jvyaml/syck.rb
+lib/jvyaml.rb
 lib/jvyamlb.jar
 lib/jvyaml_internal.jar
 test/test_yaml_one.rb
 test/test_yaml_three.rb
 test/test_yaml_two.rb
+src/java/JvyamlInternalService.java
 src/java/org/jruby/ext/jvyaml/JRubyConstructor.java
 src/java/org/jruby/ext/jvyaml/JRubyRepresenter.java
 src/java/org/jruby/ext/jvyaml/JRubySerializer.java

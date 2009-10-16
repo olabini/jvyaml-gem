@@ -1,58 +1,55 @@
 require 'test/unit'
-require 'yaml'
-#require 'jvyaml'
+require 'jvyaml'
 
 class JvYAMLMoreUnitTests < Test::Unit::TestCase
   def test_one
     bad_text = %{
  A
 R}
-    dump = YAML.dump({'text' => bad_text})
-    loaded = YAML.load(dump)
+    dump = JvYAML.dump({'text' => bad_text})
+    loaded = JvYAML.load(dump)
     assert_equal bad_text, loaded['text']
   end
 
   def test_two
-    if defined?(JRUBY_VERSION)
-      # JRUBY-1903
-      assert_equal(<<YAML_OUT, YAML::JvYAML::Scalar.new("tag:yaml.org,2002:str","foobar",'').to_str)
+    # JRUBY-1903
+    assert_equal(<<YAML_OUT, JvYAML::JvYAML::Scalar.new("tag:yaml.org,2002:str","foobar",'').to_str)
 --- foobar
 YAML_OUT
 
-      assert_equal(<<YAML_OUT, YAML::JvYAML::Scalar.new("tag:yaml.org,2002:str","foobar",'').to_s)
+    assert_equal(<<YAML_OUT, JvYAML::JvYAML::Scalar.new("tag:yaml.org,2002:str","foobar",'').to_s)
 --- foobar
 YAML_OUT
 
-      assert_equal(<<YAML_OUT, YAML::JvYAML::Seq.new("tag:yaml.org,2002:seq",[YAML::JvYAML::Scalar.new("tag:yaml.org,2002:str","foobar",'')],'').to_str)
+    assert_equal(<<YAML_OUT, JvYAML::JvYAML::Seq.new("tag:yaml.org,2002:seq",[JvYAML::JvYAML::Scalar.new("tag:yaml.org,2002:str","foobar",'')],'').to_str)
 --- [foobar]
 
 YAML_OUT
 
-      assert_equal(<<YAML_OUT, YAML::JvYAML::Seq.new("tag:yaml.org,2002:seq",[YAML::JvYAML::Scalar.new("tag:yaml.org,2002:str","foobar",'')],'').to_s)
+    assert_equal(<<YAML_OUT, JvYAML::JvYAML::Seq.new("tag:yaml.org,2002:seq",[JvYAML::JvYAML::Scalar.new("tag:yaml.org,2002:str","foobar",'')],'').to_s)
 --- [foobar]
 
 YAML_OUT
 
-      assert_equal(<<YAML_OUT, YAML::JvYAML::Map.new("tag:yaml.org,2002:map",{YAML::JvYAML::Scalar.new("tag:yaml.org,2002:str","a",'') => YAML::JvYAML::Scalar.new("tag:yaml.org,2002:str","b",'')},'').to_str)
+    assert_equal(<<YAML_OUT, JvYAML::JvYAML::Map.new("tag:yaml.org,2002:map",{JvYAML::JvYAML::Scalar.new("tag:yaml.org,2002:str","a",'') => JvYAML::JvYAML::Scalar.new("tag:yaml.org,2002:str","b",'')},'').to_str)
 --- {a: b}
 
 YAML_OUT
 
-      assert_equal(<<YAML_OUT, YAML::JvYAML::Map.new("tag:yaml.org,2002:map",{YAML::JvYAML::Scalar.new("tag:yaml.org,2002:str","a",'') => YAML::JvYAML::Scalar.new("tag:yaml.org,2002:str","b",'')},'').to_s)
+    assert_equal(<<YAML_OUT, JvYAML::JvYAML::Map.new("tag:yaml.org,2002:map",{JvYAML::JvYAML::Scalar.new("tag:yaml.org,2002:str","a",'') => JvYAML::JvYAML::Scalar.new("tag:yaml.org,2002:str","b",'')},'').to_s)
 --- {a: b}
 YAML_OUT
-    end
   end
 
   def test_three
-    assert(["--- !str \nstr: foo\n'@bar': baz\n", "--- !str \n'@bar': baz\nstr: foo\n"].include?(a_str.to_yaml))
+    assert(["--- !str \nstr: foo\n'@bar': baz\n", "--- !str \n'@bar': baz\nstr: foo\n"].include?(a_str.to_jvyaml))
   end
 
   def test_four
     # Test Scanner exception
     old_debug, $DEBUG = $DEBUG, true
     begin
-      YAML.load("!<abc")
+      JvYAML.load("!<abc")
       assert false
     rescue Exception => e
       assert e.to_s =~ /0:5\(5\)/
@@ -63,7 +60,7 @@ YAML_OUT
     # Test Parser exception
     old_debug, $DEBUG = $DEBUG, true
     begin
-      YAML.load("%YAML 2.0")
+      JvYAML.load("%YAML 2.0")
       assert false
     rescue Exception => e
       assert e.to_s =~ /0:0\(0\)/ && e.to_s =~ /0:9\(9\)/
@@ -74,7 +71,7 @@ YAML_OUT
     # Test Composer exception
     old_debug, $DEBUG = $DEBUG, true
     begin
-      YAML.load("*foobar")
+      JvYAML.load("*foobar")
       assert false
     rescue Exception => e
       assert e.to_s =~ /0:0\(0\)/ && e.to_s =~ /0:7\(7\)/
@@ -99,6 +96,6 @@ array:
 - nested_element: nested_value
 EXPECTED
 
-    assert [ex1, ex2].include?(hash.to_yaml)
+    assert [ex1, ex2].include?(hash.to_jvyaml)
   end
 end
